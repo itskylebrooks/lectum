@@ -1,0 +1,125 @@
+import { useMotionPreferences } from '@/shared/animations';
+import { LayoutGroup, motion, type Transition } from 'framer-motion';
+import { ChartPie, Home, Library } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
+
+const tabs = [
+  { id: 'library', to: '/library', label: 'Library', icon: Library, end: false },
+  { id: 'home', to: '/', label: 'Home', icon: Home, end: true },
+  { id: 'stats', to: '/stats', label: 'Stats', icon: ChartPie, end: false },
+] as const;
+
+const EXPANDED = { width: 78, gap: 8, paddingX: 8, paddingY: 8, height: 56 };
+
+export default function MobileTabBar() {
+  const location = useLocation();
+  const { prefersReducedMotion } = useMotionPreferences();
+  const dims = EXPANDED;
+
+  const springExpand: Transition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: 'spring', damping: 22, stiffness: 280, mass: 0.8 };
+
+  const springLabel: Transition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: 'spring', damping: 18, stiffness: 240, mass: 0.6 };
+
+  return (
+    <div
+      className="fixed left-1/2 z-30 -translate-x-1/2 w-max pb-[env(safe-area-inset-bottom)] md:hidden select-none"
+      style={{ bottom: '1rem' }}
+    >
+      <motion.nav className="w-max" initial={false} animate={{ y: -4 }} transition={springExpand} aria-label="Primary navigation">
+        <LayoutGroup id="mobile-tab-bar">
+          <motion.div
+            className="relative inline-flex items-center rounded-full border border-subtle bg-surface-elevated shadow-elevated mobile-tab-bar"
+            initial={false}
+            animate={{
+              gap: dims.gap,
+              paddingLeft: dims.paddingX,
+              paddingRight: dims.paddingX,
+              paddingTop: dims.paddingY,
+              paddingBottom: dims.paddingY,
+            }}
+            transition={springExpand}
+          >
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+
+              return (
+                <NavLink
+                  key={tab.id}
+                  to={tab.to}
+                  end={tab.end}
+                  aria-label={tab.label}
+                  title={tab.label}
+                  onClick={(event) => {
+                    if (location.pathname === tab.to) event.preventDefault();
+                  }}
+                  className="relative z-10 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-text-primary)]"
+                >
+                  {({ isActive }) => (
+                    <motion.div
+                      className="relative flex flex-col items-center justify-center rounded-full font-medium leading-tight text-center"
+                      initial={false}
+                      animate={{
+                        height: dims.height,
+                        width: dims.width,
+                        paddingTop: 6,
+                        paddingBottom: 6,
+                        paddingLeft: 8,
+                        paddingRight: 8,
+                      }}
+                      transition={springExpand}
+                    >
+                      {isActive ? (
+                        <motion.span
+                          className="absolute inset-0 rounded-full bg-[var(--color-accent)]"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={springExpand}
+                        />
+                      ) : null}
+
+                      <div className="relative z-10 w-full h-full flex items-center justify-center">
+                        <motion.span
+                          aria-hidden
+                          className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${
+                            isActive ? 'text-inverse' : 'text-strong'
+                          }`}
+                          initial={false}
+                          animate={{ opacity: 1 }}
+                          transition={springExpand}
+                        >
+                          <motion.span className="flex items-center justify-center shrink-0" initial={false} transition={springExpand}>
+                            <Icon className="h-5 w-5" aria-hidden />
+                          </motion.span>
+                          <motion.span
+                            aria-hidden
+                            className="block overflow-hidden text-center whitespace-nowrap"
+                            initial={false}
+                            animate={{
+                              opacity: 1,
+                              height: 14,
+                              marginTop: 4,
+                              scaleY: 1,
+                            }}
+                            transition={springLabel}
+                            style={{ fontSize: '11px', transformOrigin: 'top center' }}
+                          >
+                            {tab.label}
+                          </motion.span>
+                        </motion.span>
+                      </div>
+                    </motion.div>
+                  )}
+                </NavLink>
+              );
+            })}
+          </motion.div>
+        </LayoutGroup>
+      </motion.nav>
+    </div>
+  );
+}
