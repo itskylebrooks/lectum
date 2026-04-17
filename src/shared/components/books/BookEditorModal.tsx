@@ -6,7 +6,7 @@ import type {
   BookFormStatus,
   BookWithThumbnail,
 } from '@/shared/types';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Upload, X } from 'lucide-react';
 
@@ -110,14 +110,8 @@ export default function BookEditorModal({
     };
   }, [visible]);
 
-  const isFinishedBook = Boolean(book?.dateFinished);
   const titleText = mode === 'create' ? 'Add Book' : 'Edit Book';
-  const statusSummary = useMemo(() => {
-    if (isFinishedBook) {
-      return 'Finished books stay in Library. Use “Reopen” from the card to move one back into Reading.';
-    }
-    return 'Choose whether this book starts in Next or Reading.';
-  }, [isFinishedBook]);
+  const isFinishedBook = Boolean(book?.dateFinished);
 
   async function handleThumbnailChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -194,13 +188,12 @@ export default function BookEditorModal({
           aria-labelledby="book-editor-title"
         >
           <div className="flex items-start justify-between gap-3 border-b border-subtle pb-3">
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.24em] text-soft">Lectum</p>
-              <h2 id="book-editor-title" className="mt-2 text-xl font-semibold text-strong">
-                {titleText}
-              </h2>
-              <p className="mt-1 max-w-md text-sm text-muted">{statusSummary}</p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.24em] text-soft">Lectum</p>
+            <h2 id="book-editor-title" className="mt-2 text-xl font-semibold text-strong">
+              {titleText}
+            </h2>
+          </div>
             <button
               type="button"
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-subtle text-muted hover-nonaccent"
@@ -298,7 +291,7 @@ export default function BookEditorModal({
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="h-4 w-4" />
-                    {thumbnailDataUrl ? 'Replace image' : 'Choose image'}
+                    {thumbnailDataUrl ? 'Replace' : 'Choose'}
                   </button>
                   {thumbnailDataUrl ? (
                     <button
@@ -322,18 +315,13 @@ export default function BookEditorModal({
                     </button>
                   ) : null}
                 </div>
-                <p className="text-xs text-muted">
-                  {thumbnailDataUrl
-                    ? 'Cover image selected. Open Preview to adjust the visible area.'
-                    : 'Optional cover image from your device.'}
-                </p>
               </div>
             </div>
 
             {!isFinishedBook ? (
               <div className="space-y-2">
                 <p className="text-sm text-muted">Status</p>
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid w-full grid-cols-2 gap-2 sm:max-w-[calc(50%-0.375rem)]">
                   <button
                     type="button"
                     onClick={() => setStatus('next')}

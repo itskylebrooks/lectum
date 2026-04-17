@@ -11,7 +11,6 @@ import {
 
 export default function Home() {
   const books = useBookStore((state) => state.books);
-  const openCreate = useBookStore((state) => state.openCreate);
   const openEdit = useBookStore((state) => state.openEdit);
   const openFinish = useBookStore((state) => state.openFinish);
   const dateFormat = usePreferencesStore((state) => state.dateFormat);
@@ -24,25 +23,9 @@ export default function Home() {
     <div className="mt-4 space-y-4">
       <section className="rounded-[2rem] border border-subtle bg-surface p-6 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-soft">Right now</p>
-        <h1 className="mt-3 text-3xl font-semibold text-strong">
+        <h1 className="mt-3 text-base font-medium text-muted sm:text-lg">
           Keep the books you are actively reading visible and finish them without ceremony.
         </h1>
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            className="rounded-2xl bg-accent px-4 py-3 text-sm font-medium text-inverse hover-accent-fade"
-            onClick={() => openCreate('reading')}
-          >
-            Add current read
-          </button>
-          <button
-            type="button"
-            className="rounded-2xl border border-subtle px-4 py-3 text-sm text-strong hover-nonaccent"
-            onClick={() => openCreate('next')}
-          >
-            Add to backlog
-          </button>
-        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -53,7 +36,7 @@ export default function Home() {
           note={
             recentFinished
               ? `${recentFinished.author} · ${formatDisplayDate(recentFinished.dateFinished, dateFormat)}`
-              : 'Finish one book and it shows up here.'
+              : 'No finished books yet.'
           }
         />
       </section>
