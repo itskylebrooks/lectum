@@ -21,7 +21,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '0.5.0';
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [visible, setVisible] = useState(open);
@@ -359,10 +359,10 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
           <div className="text-sm">
             <div className="grid grid-cols-3 items-center gap-2">
-              <div>
+              <div className="col-span-2">
                 <div className="text-sm font-semibold mb-0.5">FORMAT</div>
               </div>
-              <div className="relative w-full col-span-2">
+              <div className="relative w-full">
                 <select
                   aria-label="Date format"
                   className="appearance-none w-full rounded-lg border border-subtle bg-transparent px-3 h-10 pr-7 text-sm text-strong"

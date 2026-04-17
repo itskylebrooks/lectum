@@ -25,12 +25,8 @@ export default function Home() {
       <section className="rounded-[2rem] border border-subtle bg-surface p-6 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-soft">Right now</p>
         <h1 className="mt-3 text-3xl font-semibold text-strong">
-          A calm reading log for what’s in motion.
+          Keep the books you are actively reading visible and finish them without ceremony.
         </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted">
-          Keep the books you are actively reading visible, finish them without ceremony, and keep
-          the rest of your library close at hand.
-        </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <button
             type="button"

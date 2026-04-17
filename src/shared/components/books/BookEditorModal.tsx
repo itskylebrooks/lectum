@@ -1,3 +1,4 @@
+import ImageCropModal from '@/shared/components/books/ImageCropModal';
 import type {
   BookCategory,
   BookEditorValues,
@@ -7,7 +8,7 @@ import type {
 } from '@/shared/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ImagePlus, Upload, X } from 'lucide-react';
+import { ChevronDown, Upload, X } from 'lucide-react';
 
 interface BookEditorModalProps {
   open: boolean;
@@ -48,6 +49,8 @@ export default function BookEditorModal({
   const [category, setCategory] = useState<BookCategory>('fiction');
   const [status, setStatus] = useState<BookFormStatus>('next');
   const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [cropMimeType, setCropMimeType] = useState('image/jpeg');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -71,6 +74,8 @@ export default function BookEditorModal({
       setCategory(book?.category ?? 'fiction');
       setStatus(book?.isReading ? 'reading' : initialStatus);
       setThumbnailDataUrl(book?.thumbnailDataUrl ?? null);
+      setCropSource(null);
+      setCropMimeType('image/jpeg');
       setSubmitting(false);
       setError(null);
       enterRaf.current = requestAnimationFrame(() => {
@@ -118,7 +123,9 @@ export default function BookEditorModal({
     const file = event.target.files?.[0];
     if (!file) return;
     const result = await fileToDataUrl(file);
-    setThumbnailDataUrl(result);
+    setCropSource(result);
+    setCropMimeType(file.type || 'image/jpeg');
+    event.target.value = '';
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -174,204 +181,217 @@ export default function BookEditorModal({
   if (!visible) return null;
 
   return createPortal(
-    <div
-      className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? 'bg-transparent' : 'bg-overlay/90 backdrop-blur-sm'}`}
-      onClick={beginClose}
-    >
+    <>
       <div
-        className={`max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[1.75rem] border border-subtle bg-surface-elevated p-4 shadow-elevated transition-all duration-200 sm:p-5 ${closing || entering ? 'opacity-0 scale-[0.95] translate-y-1' : 'opacity-100 scale-100 translate-y-0'}`}
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="book-editor-title"
+        className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? 'bg-transparent' : 'bg-overlay/90 backdrop-blur-sm'}`}
+        onClick={beginClose}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-subtle pb-3">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.24em] text-soft">Lectum</p>
-            <h2 id="book-editor-title" className="mt-2 text-xl font-semibold text-strong">
-              {titleText}
-            </h2>
-            <p className="mt-1 max-w-md text-sm text-muted">{statusSummary}</p>
+        <div
+          className={`max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[1.75rem] border border-subtle bg-surface-elevated p-4 shadow-elevated transition-all duration-200 sm:p-5 ${closing || entering ? 'opacity-0 scale-[0.95] translate-y-1' : 'opacity-100 scale-100 translate-y-0'}`}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="book-editor-title"
+        >
+          <div className="flex items-start justify-between gap-3 border-b border-subtle pb-3">
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-[0.24em] text-soft">Lectum</p>
+              <h2 id="book-editor-title" className="mt-2 text-xl font-semibold text-strong">
+                {titleText}
+              </h2>
+              <p className="mt-1 max-w-md text-sm text-muted">{statusSummary}</p>
+            </div>
+            <button
+              type="button"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-subtle text-muted hover-nonaccent"
+              onClick={beginClose}
+              aria-label="Close book editor"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-subtle text-muted hover-nonaccent"
-            onClick={beginClose}
-            aria-label="Close book editor"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
 
-        <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1">
-              <span className="text-sm text-muted">Title</span>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                placeholder="The Left Hand of Darkness"
-              />
-            </label>
+          <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-sm text-muted">Title</span>
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                  placeholder="The Left Hand of Darkness"
+                />
+              </label>
 
-            <label className="space-y-1">
-              <span className="text-sm text-muted">Author</span>
-              <input
-                value={author}
-                onChange={(event) => setAuthor(event.target.value)}
-                className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                placeholder="Ursula K. Le Guin"
-              />
-            </label>
+              <label className="space-y-1">
+                <span className="text-sm text-muted">Author</span>
+                <input
+                  value={author}
+                  onChange={(event) => setAuthor(event.target.value)}
+                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                  placeholder="Ursula K. Le Guin"
+                />
+              </label>
 
-            <label className="space-y-1">
-              <span className="text-sm text-muted">Publication year</span>
-              <input
-                value={publicationYear}
-                onChange={(event) => setPublicationYear(event.target.value)}
-                inputMode="numeric"
-                className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                placeholder="1969"
-              />
-            </label>
+              <label className="space-y-1">
+                <span className="text-sm text-muted">Publication year</span>
+                <input
+                  value={publicationYear}
+                  onChange={(event) => setPublicationYear(event.target.value)}
+                  inputMode="numeric"
+                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                  placeholder="1969"
+                />
+              </label>
 
-            <label className="space-y-1">
-              <span className="text-sm text-muted">Format</span>
-              <div className="relative">
-                <select
-                  value={format}
-                  onChange={(event) => setFormat(event.target.value as BookFormat)}
-                  className="appearance-none w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 pr-9 text-sm text-strong outline-none ring-0 focus:border-accent"
-                >
-                  {formats.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              </div>
-            </label>
-
-            <label className="space-y-1">
-              <span className="text-sm text-muted">Category</span>
-              <div className="mt-1 flex gap-2">
-                {categories.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setCategory(value)}
-                    className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
-                      category === value
-                        ? 'bg-accent text-inverse shadow-elevated hover-accent-fade'
-                        : 'bg-surface-elevated text-muted hover-nonaccent'
-                    }`}
+              <label className="space-y-1">
+                <span className="text-sm text-muted">Format</span>
+                <div className="relative">
+                  <select
+                    value={format}
+                    onChange={(event) => setFormat(event.target.value as BookFormat)}
+                    className="appearance-none w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 pr-9 text-sm text-strong outline-none ring-0 focus:border-accent"
                   >
-                    {value}
-                  </button>
-                ))}
-              </div>
-            </label>
+                    {formats.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                </div>
+              </label>
 
-            <div className="space-y-2">
-              <span className="block text-sm text-muted">Thumbnail</span>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleThumbnailChange}
-              />
-              <div className="flex items-start gap-3">
-                {thumbnailDataUrl ? (
-                  <img
-                    src={thumbnailDataUrl}
-                    alt="Selected thumbnail preview"
-                    className="h-24 w-[4.5rem] rounded-xl border border-subtle object-cover"
-                  />
-                ) : (
-                  <div className="flex h-24 w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-dashed border-subtle bg-surface text-muted">
-                    <ImagePlus className="h-5 w-5" />
-                  </div>
-                )}
-                <div className="space-y-2">
+              <label className="space-y-1">
+                <span className="text-sm text-muted">Category</span>
+                <div className="mt-1 flex gap-2">
+                  {categories.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setCategory(value)}
+                      className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
+                        category === value
+                          ? 'bg-accent text-inverse shadow-elevated hover-accent-fade'
+                          : 'bg-surface-elevated text-muted hover-nonaccent'
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </label>
+
+              <div className="space-y-2">
+                <span className="block text-sm text-muted">Thumbnail</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleThumbnailChange}
+                />
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="h-4 w-4" />
-                    {thumbnailDataUrl ? 'Replace image' : 'Upload image'}
+                    {thumbnailDataUrl ? 'Replace image' : 'Choose image'}
                   </button>
                   {thumbnailDataUrl ? (
                     <button
                       type="button"
-                      className="block rounded-xl border border-subtle px-3 py-2 text-sm text-muted hover-nonaccent"
+                      className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                      onClick={() => {
+                        setCropSource(thumbnailDataUrl);
+                        setCropMimeType('image/jpeg');
+                      }}
+                    >
+                      Preview
+                    </button>
+                  ) : null}
+                  {thumbnailDataUrl ? (
+                    <button
+                      type="button"
+                      className="rounded-xl border border-subtle px-3 py-2 text-sm text-muted hover-nonaccent"
                       onClick={() => setThumbnailDataUrl(null)}
                     >
                       Remove image
                     </button>
                   ) : null}
                 </div>
-              </div>
-              <p className="text-xs text-muted">Optional cover image from your device.</p>
-            </div>
-          </div>
-
-          {!isFinishedBook ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted">Status</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setStatus('next')}
-                  className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                    status === 'next'
-                      ? 'border-subtle bg-accent text-inverse shadow-elevated'
-                      : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
-                  }`}
-                >
-                  <span className="block text-sm font-semibold">Next</span>
-                  <span className="mt-0.5 block text-[11px] opacity-80">Save it for later.</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatus('reading')}
-                  className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                    status === 'reading'
-                      ? 'border-subtle bg-accent text-inverse shadow-elevated'
-                      : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
-                  }`}
-                >
-                  <span className="block text-sm font-semibold">Reading</span>
-                  <span className="mt-0.5 block text-[11px] opacity-80">Show it on Home right away.</span>
-                </button>
+                <p className="text-xs text-muted">
+                  {thumbnailDataUrl
+                    ? 'Cover image selected. Open Preview to adjust the visible area.'
+                    : 'Optional cover image from your device.'}
+                </p>
               </div>
             </div>
-          ) : null}
 
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
+            {!isFinishedBook ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted">Status</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setStatus('next')}
+                    className={`rounded-xl border px-2.5 py-2 text-left transition ${
+                      status === 'next'
+                        ? 'border-subtle bg-accent text-inverse shadow-elevated'
+                        : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">Next</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatus('reading')}
+                    className={`rounded-xl border px-2.5 py-2 text-left transition ${
+                      status === 'reading'
+                        ? 'border-subtle bg-accent text-inverse shadow-elevated'
+                        : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">Reading</span>
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
-          <div className="flex flex-wrap justify-end gap-2 border-t border-subtle pt-3">
-            <button
-              type="button"
-              className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-              onClick={beginClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-inverse hover-accent-fade disabled:opacity-60"
-            >
-              {submitting ? 'Saving…' : mode === 'create' ? 'Add book' : 'Save changes'}
-            </button>
-          </div>
-        </form>
+            {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+            <div className="flex flex-wrap justify-end gap-2 border-t border-subtle pt-3">
+              <button
+                type="button"
+                className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                onClick={beginClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-inverse hover-accent-fade disabled:opacity-60"
+              >
+                {submitting ? 'Saving…' : mode === 'create' ? 'Add book' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>,
+      <ImageCropModal
+        open={Boolean(cropSource)}
+        source={cropSource}
+        mimeType={cropMimeType}
+        onClose={() => setCropSource(null)}
+        onConfirm={(dataUrl) => {
+          setThumbnailDataUrl(dataUrl);
+          setCropSource(null);
+        }}
+      />
+    </>,
     document.body,
   );
 }
