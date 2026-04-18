@@ -1,5 +1,8 @@
 import BookDetailsModal from "@/shared/components/books/BookDetailsModal";
 import BookThumbnailCard from "@/shared/components/books/BookThumbnailCard";
+import DropdownSelect, {
+  type DropdownSelectOption,
+} from "@/shared/components/inputs/DropdownSelect";
 import { useBookStore } from "@/shared/store/books";
 import type {
   BookCategory,
@@ -11,12 +14,34 @@ import { selectFinishedBooks, sortFinishedBooks } from "@/shared/utils/stats";
 import { useMemo, useState } from "react";
 
 const sortOptions: { value: LibrarySort; label: string }[] = [
-  { value: "finishedDesc", label: "Finished date ↓" },
-  { value: "finishedAsc", label: "Finished date ↑" },
+  { value: "finishedDesc", label: "Finished ↓" },
+  { value: "finishedAsc", label: "Finished ↑" },
   { value: "title", label: "Title" },
   { value: "author", label: "Author" },
-  { value: "publicationYearDesc", label: "Publication year ↓" },
-  { value: "publicationYearAsc", label: "Publication year ↑" },
+  { value: "publicationYearDesc", label: "Published ↓" },
+  { value: "publicationYearAsc", label: "Published ↑" },
+];
+
+const ratingOptions: Array<DropdownSelectOption<BookRating | "all">> = [
+  { value: "all", label: "All ratings" },
+  { value: "loved", label: "Loved" },
+  { value: "liked", label: "Liked" },
+  { value: "mixed", label: "Mixed" },
+  { value: "disliked", label: "Disliked" },
+  { value: "abandoned", label: "Abandoned" },
+];
+
+const formatOptions: Array<DropdownSelectOption<BookFormat | "all">> = [
+  { value: "all", label: "All formats" },
+  { value: "print", label: "Print" },
+  { value: "digital", label: "Digital" },
+  { value: "audiobook", label: "Audiobook" },
+];
+
+const categoryOptions: Array<DropdownSelectOption<BookCategory | "all">> = [
+  { value: "all", label: "All categories" },
+  { value: "fiction", label: "Fiction" },
+  { value: "non-fiction", label: "Non-fiction" },
 ];
 
 export default function LibraryPage() {
@@ -64,54 +89,30 @@ export default function LibraryPage() {
     <div className="mt-4 space-y-4">
       <section className="rounded-[1.75rem] border border-subtle bg-surface p-5">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <select
+          <DropdownSelect
+            label="Sort"
             value={sort}
-            onChange={(event) => setSort(event.target.value as LibrarySort)}
-            className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <select
+            options={sortOptions}
+            onChange={(nextSort) => setSort(nextSort)}
+          />
+          <DropdownSelect
+            label="Rating"
             value={ratingFilter}
-            onChange={(event) =>
-              setRatingFilter(event.target.value as BookRating | "all")
-            }
-            className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
-          >
-            <option value="all">All ratings</option>
-            <option value="loved">Loved</option>
-            <option value="liked">Liked</option>
-            <option value="mixed">Mixed</option>
-            <option value="disliked">Disliked</option>
-            <option value="abandoned">Abandoned</option>
-          </select>
-          <select
+            options={ratingOptions}
+            onChange={(nextRating) => setRatingFilter(nextRating)}
+          />
+          <DropdownSelect
+            label="Format"
             value={formatFilter}
-            onChange={(event) =>
-              setFormatFilter(event.target.value as BookFormat | "all")
-            }
-            className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
-          >
-            <option value="all">All formats</option>
-            <option value="print">Print</option>
-            <option value="digital">Digital</option>
-            <option value="audiobook">Audiobook</option>
-          </select>
-          <select
+            options={formatOptions}
+            onChange={(nextFormat) => setFormatFilter(nextFormat)}
+          />
+          <DropdownSelect
+            label="Category"
             value={categoryFilter}
-            onChange={(event) =>
-              setCategoryFilter(event.target.value as BookCategory | "all")
-            }
-            className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
-          >
-            <option value="all">All categories</option>
-            <option value="fiction">Fiction</option>
-            <option value="non-fiction">Non-fiction</option>
-          </select>
+            options={categoryOptions}
+            onChange={(nextCategory) => setCategoryFilter(nextCategory)}
+          />
         </div>
         {activeFilterCount > 0 ? (
           <button

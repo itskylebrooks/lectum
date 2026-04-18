@@ -50,7 +50,9 @@ describe("LibraryPage", () => {
   it("renders library page with books and filters", async () => {
     render(<LibraryPage />);
 
-    expect(screen.getByDisplayValue("All ratings")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "All ratings" }),
+    ).toBeInTheDocument();
 
     // Book should be visible and clickable
     const bookButton = screen.getByLabelText(/Open Finished Book/i);
