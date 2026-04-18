@@ -13,10 +13,12 @@ function BarList({
   items,
   formatLabel = (label: string) => label,
   compact = false,
+  showBars = true,
 }: {
   items: { label: string; count: number }[];
   formatLabel?: (label: string) => string;
   compact?: boolean;
+  showBars?: boolean;
 }) {
   const max = Math.max(...items.map((item) => item.count), 1);
 
@@ -28,14 +30,16 @@ function BarList({
             <span>{formatLabel(item.label)}</span>
             <span>{item.count}</span>
           </div>
-          <div
-            className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-progress-track`}
-          >
+          {showBars ? (
             <div
-              className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-progress`}
-              style={{ width: `${(item.count / max) * 100}%` }}
-            />
-          </div>
+              className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-progress-track`}
+            >
+              <div
+                className={`${compact ? "h-1.5" : "h-2"} rounded-full bg-progress`}
+                style={{ width: `${(item.count / max) * 100}%` }}
+              />
+            </div>
+          ) : null}
         </div>
       ))}
     </div>
@@ -92,6 +96,7 @@ export default function StatsPage() {
               items={stats.perMonth}
               formatLabel={formatMonthLabel}
               compact
+              showBars={false}
             />
           </div>
         </div>
@@ -102,6 +107,7 @@ export default function StatsPage() {
               items={stats.perYear}
               formatLabel={formatYearLabel}
               compact
+              showBars={false}
             />
           </div>
         </div>

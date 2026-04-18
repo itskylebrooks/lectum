@@ -467,10 +467,12 @@ export default function BookEditorModal({
                           className="hidden"
                           onChange={handleThumbnailChange}
                         />
-                        <div className="flex flex-wrap gap-2">
+                        <div
+                          className={`grid gap-2 ${thumbnailDataUrl ? "grid-cols-3" : "grid-cols-1"}`}
+                        >
                           <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
                             onClick={() => fileInputRef.current?.click()}
                           >
                             <Upload className="h-4 w-4" />
@@ -479,7 +481,7 @@ export default function BookEditorModal({
                           {thumbnailDataUrl ? (
                             <button
                               type="button"
-                              className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
                               onClick={() => {
                                 setCropSource(thumbnailDataUrl);
                                 setCropMimeType("image/jpeg");
@@ -491,7 +493,7 @@ export default function BookEditorModal({
                           {thumbnailDataUrl ? (
                             <button
                               type="button"
-                              className="rounded-xl border border-subtle px-3 py-2 text-sm text-muted hover-nonaccent"
+                              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-muted hover-nonaccent"
                               onClick={() => setThumbnailDataUrl(null)}
                             >
                               Remove image
