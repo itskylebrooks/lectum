@@ -214,7 +214,6 @@ export default function BookDetailsModal({
               className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse sm:order-1"
               onClick={() => {
                 onDelete(book.id);
-                beginClose();
               }}
             >
               Delete

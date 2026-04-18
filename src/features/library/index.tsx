@@ -11,7 +11,7 @@ import type {
   LibrarySort,
 } from "@/shared/types";
 import { selectFinishedBooks, sortFinishedBooks } from "@/shared/utils/stats";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const sortOptions: { value: LibrarySort; label: string }[] = [
   { value: "finishedDesc", label: "Finished ↓" },
@@ -77,6 +77,12 @@ export default function LibraryPage() {
   ).length;
 
   const selectedBookData = books.find((b) => b.id === selectedBook) ?? null;
+
+  useEffect(() => {
+    if (selectedBook !== null && selectedBookData === null) {
+      setSelectedBook(null);
+    }
+  }, [selectedBook, selectedBookData]);
 
   function resetFilters() {
     setRatingFilter("all");
