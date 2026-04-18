@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><style>
+    #light-icon {
+      display: inline;
+    }
+    #dark-icon {
+      display: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #light-icon {
+        display: none;
+      }
+      #dark-icon {
+        display: inline;
+      }
+    }
+  </style><g id="light-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000"><g clip-path="url(#SvgjsClipPath1129)"><rect width="1000" height="1000" fill="#000000"></rect><g transform="matrix(6.0344827586206895,0,0,6.0344827586206895,150,150)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 116 116" width="116" height="116"><rect x="0" y="0" width="116" height="116" rx="20" fill="#111111"></rect><clipPath id="half"><rect x="0" y="0" width="58" height="116"></rect></clipPath><path d="M26 20 Q26 14 32 14 L84 14 Q90 14 90 20 L90 100 L58 80 L26 100 Z" fill="#ffffff" clip-path="url(#half)"></path><path d="M26 20 Q26 14 32 14 L84 14 Q90 14 90 20 L90 100 L58 80 L26 100 Z" fill="none" stroke="#ffffff" stroke-width="11" stroke-linejoin="round"></path></svg></g></g><defs><clipPath id="SvgjsClipPath1129"><rect width="1000" height="1000" x="0" y="0" rx="250" ry="250"></rect></clipPath></defs></svg></g><g id="dark-icon"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="1000"><g><g transform="matrix(8.620689655172415,0,0,8.620689655172415,-5.684341886080802e-14,-5.684341886080802e-14)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 116 116" width="116" height="116"><rect x="0" y="0" width="116" height="116" rx="20" fill="#111111"></rect><clipPath id="half"><rect x="0" y="0" width="58" height="116"></rect></clipPath><path d="M26 20 Q26 14 32 14 L84 14 Q90 14 90 20 L90 100 L58 80 L26 100 Z" fill="#ffffff" clip-path="url(#half)"></path><path d="M26 20 Q26 14 32 14 L84 14 Q90 14 90 20 L90 100 L58 80 L26 100 Z" fill="none" stroke="#ffffff" stroke-width="11" stroke-linejoin="round"></path></svg></g></g></svg></g></svg>

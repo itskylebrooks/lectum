@@ -18,36 +18,47 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://lectum.wiki/" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#000000"
+      media="(prefers-color-scheme: dark)"
+    />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Lectum" />
 
     <!-- Icons -->
-    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
-    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96x96.png" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <title>Lectum</title>
     <script>
       (function () {
         try {
-          var STORAGE_KEY = 'lectum-theme';
-          var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+          var STORAGE_KEY = "lectum-theme";
+          var mq =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)");
 
           function apply(theme) {
-            var t = theme || localStorage.getItem(STORAGE_KEY) || 'system';
-            if (t === 'dark') {
-              document.documentElement.classList.add('dark');
-            } else if (t === 'light') {
-              document.documentElement.classList.remove('dark');
+            var t = theme || localStorage.getItem(STORAGE_KEY) || "system";
+            if (t === "dark") {
+              document.documentElement.classList.add("dark");
+            } else if (t === "light") {
+              document.documentElement.classList.remove("dark");
             } else {
-              if (mq && mq.matches) document.documentElement.classList.add('dark');
-              else document.documentElement.classList.remove('dark');
+              if (mq && mq.matches)
+                document.documentElement.classList.add("dark");
+              else document.documentElement.classList.remove("dark");
             }
           }
 
@@ -55,21 +66,20 @@
 
           if (mq) {
             var onChange = function (e) {
-              var t = localStorage.getItem(STORAGE_KEY) || 'system';
-              if (t === 'system') {
-                if (e.matches) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
+              var t = localStorage.getItem(STORAGE_KEY) || "system";
+              if (t === "system") {
+                if (e.matches) document.documentElement.classList.add("dark");
+                else document.documentElement.classList.remove("dark");
               }
             };
-            if (mq.addEventListener) mq.addEventListener('change', onChange);
+            if (mq.addEventListener) mq.addEventListener("change", onChange);
             else if (mq.addListener) mq.addListener(onChange);
           }
 
-          window.addEventListener('storage', function (e) {
+          window.addEventListener("storage", function (e) {
             if (e.key === STORAGE_KEY) apply(e.newValue);
           });
-        } catch (err) {
-        }
+        } catch (err) {}
       })();
     </script>
   </head>
