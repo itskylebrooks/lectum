@@ -111,16 +111,14 @@ export default function BookDetailsModal({
         aria-labelledby="book-details-title"
       >
         <div className="p-5 sm:p-6">
-          <div className="flex items-start justify-end gap-2 mb-4">
-            <button
-              type="button"
-              className="rounded-full border border-subtle p-2 text-muted hover-nonaccent"
-              onClick={beginClose}
-              aria-label="Close details"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            className="absolute right-5 top-5 grid h-8 w-8 place-items-center rounded-full bg-control text-muted hover-nonaccent sm:right-6 sm:top-6"
+            onClick={beginClose}
+            aria-label="Close details"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
           <div className="flex flex-col sm:flex-row sm:items-start gap-6">
             {/* Left Column - Thumbnail */}
@@ -188,7 +186,18 @@ export default function BookDetailsModal({
           <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               type="button"
-              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse sm:order-1"
+              onClick={() => {
+                onDelete(book.id);
+                beginClose();
+              }}
+            >
+              Delete
+            </button>
+
+            <button
+              type="button"
+              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-2"
               onClick={() => {
                 onEdit(book.id);
                 beginClose();
@@ -200,7 +209,7 @@ export default function BookDetailsModal({
             {isReading ? (
               <button
                 type="button"
-                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-3"
                 onClick={() => {
                   onFinish(book.id);
                   beginClose();
@@ -211,7 +220,7 @@ export default function BookDetailsModal({
             ) : isFinished ? (
               <button
                 type="button"
-                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-3"
                 onClick={() => {
                   onReopen(book.id);
                   beginClose();
@@ -222,7 +231,7 @@ export default function BookDetailsModal({
             ) : (
               <button
                 type="button"
-                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-3"
                 onClick={() => {
                   onStartReading(book.id);
                   beginClose();
@@ -231,17 +240,6 @@ export default function BookDetailsModal({
                 Start reading
               </button>
             )}
-
-            <button
-              type="button"
-              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse"
-              onClick={() => {
-                onDelete(book.id);
-                beginClose();
-              }}
-            >
-              Delete
-            </button>
           </div>
         </div>
       </div>

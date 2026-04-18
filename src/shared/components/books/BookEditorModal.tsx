@@ -325,7 +325,7 @@ export default function BookEditorModal({
                             value={title}
                             onChange={(event) => setTitle(event.target.value)}
                             className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                            placeholder="The Left Hand of Darkness"
+                            placeholder="Metro 2033"
                           />
                         </label>
 
@@ -337,7 +337,7 @@ export default function BookEditorModal({
                             value={author}
                             onChange={(event) => setAuthor(event.target.value)}
                             className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                            placeholder="Ursula K. Le Guin"
+                            placeholder="Dmitry Glukhovsky"
                           />
                         </label>
                       </div>
@@ -394,19 +394,6 @@ export default function BookEditorModal({
                             <div className="grid w-full grid-cols-2 gap-2">
                               <button
                                 type="button"
-                                onClick={() => setStatus("next")}
-                                className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                                  status === "next"
-                                    ? "border-subtle bg-accent text-inverse shadow-elevated"
-                                    : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
-                                }`}
-                              >
-                                <span className="block text-sm font-semibold">
-                                  Next
-                                </span>
-                              </button>
-                              <button
-                                type="button"
                                 onClick={() => setStatus("reading")}
                                 className={`rounded-xl border px-2.5 py-2 text-left transition ${
                                   status === "reading"
@@ -416,6 +403,19 @@ export default function BookEditorModal({
                               >
                                 <span className="block text-sm font-semibold">
                                   Reading
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setStatus("next")}
+                                className={`rounded-xl border px-2.5 py-2 text-left transition ${
+                                  status === "next"
+                                    ? "border-subtle bg-accent text-inverse shadow-elevated"
+                                    : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
+                                }`}
+                              >
+                                <span className="block text-sm font-semibold">
+                                  Next
                                 </span>
                               </button>
                             </div>
