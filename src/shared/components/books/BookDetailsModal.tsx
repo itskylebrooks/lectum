@@ -104,108 +104,65 @@ export default function BookDetailsModal({
       onClick={beginClose}
     >
       <div
-        className={`w-full max-w-xl rounded-2xl border border-subtle bg-surface-elevated shadow-elevated overflow-y-auto max-h-[90vh] ring-1 ring-black/5 dark:ring-neutral-700/5 relative transition-all duration-200 ${closing || entering ? "opacity-0 scale-[0.95] translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
+        className={`w-full max-w-[20rem] sm:max-w-[22rem] rounded-2xl border border-subtle bg-surface-elevated shadow-elevated overflow-y-auto max-h-[90vh] ring-1 ring-black/5 dark:ring-neutral-700/5 relative transition-all duration-200 ${closing || entering ? "opacity-0 scale-[0.95] translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-details-title"
       >
         <div className="p-5 sm:p-6">
-          <button
-            type="button"
-            className="absolute right-5 top-5 grid h-8 w-8 place-items-center rounded-full bg-control text-muted hover-nonaccent sm:right-6 sm:top-6"
-            onClick={beginClose}
-            aria-label="Close details"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div className="flex min-h-8 flex-wrap items-center gap-2">
+              <BookBadge tone="neutral">
+                {formatBookFormatLabel(book.format)}
+              </BookBadge>
+              <BookBadge tone="neutral">
+                {formatBookCategoryLabel(book.category)}
+              </BookBadge>
+              <BookBadge tone="neutral">{book.publicationYear}</BookBadge>
+            </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-            {/* Left Column - Thumbnail */}
-            <div className="flex justify-center sm:justify-start flex-shrink-0">
+            <button
+              type="button"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-control text-muted hover-nonaccent"
+              onClick={beginClose}
+              aria-label="Close details"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-center">
               <BookCover
                 title={book.title}
                 author={book.author}
                 thumbnailDataUrl={book.thumbnailDataUrl}
-                className="h-56 w-40 shadow-sm"
+                className="h-64 w-44 shadow-sm"
               />
             </div>
 
-            {/* Right Column - Content */}
-            <div className="flex-1 flex flex-col gap-4">
-              <div>
-                <h2
-                  id="book-details-title"
-                  className="text-lg font-semibold text-strong"
-                >
-                  {book.title}
-                </h2>
-                <p className="mt-1 text-sm text-muted">{book.author}</p>
-              </div>
+            <div className="space-y-2 text-sm text-muted">
+              {isFinished && (
+                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-strong">
+                  <span>
+                    {formatDisplayDate(book.dateFinished, dateFormat)}
+                  </span>
+                  <span aria-hidden="true">•</span>
+                  <span>{formatBookRatingLabel(rating)}</span>
+                </div>
+              )}
 
-              <div className="flex flex-wrap gap-2">
-                <BookBadge tone="neutral">
-                  {formatBookFormatLabel(book.format)}
-                </BookBadge>
-                <BookBadge tone="neutral">
-                  {formatBookCategoryLabel(book.category)}
-                </BookBadge>
-                <BookBadge tone="neutral">{book.publicationYear}</BookBadge>
-                {isFinished && (
-                  <BookBadge tone="neutral">
-                    {formatBookRatingLabel(rating)}
-                  </BookBadge>
-                )}
-              </div>
-
-              <div className="space-y-2 text-sm text-muted pt-4">
-                {isFinished && (
-                  <div>
-                    <span className="text-xs uppercase tracking-[0.22em] text-soft">
-                      Finished
-                    </span>
-                    <p className="text-strong">
-                      {formatDisplayDate(book.dateFinished, dateFormat)}
-                    </p>
-                  </div>
-                )}
-
-                {isReading && (
-                  <div>
-                    <span className="text-xs uppercase tracking-[0.22em] text-soft">
-                      Status
-                    </span>
-                    <p className="text-strong">Currently reading</p>
-                  </div>
-                )}
-              </div>
+              {isReading && (
+                <div>
+                  <p className="text-center text-strong">Reading</p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Buttons Below All Columns */}
           <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <button
-              type="button"
-              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse sm:order-1"
-              onClick={() => {
-                onDelete(book.id);
-                beginClose();
-              }}
-            >
-              Delete
-            </button>
-
-            <button
-              type="button"
-              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-2"
-              onClick={() => {
-                onEdit(book.id);
-                beginClose();
-              }}
-            >
-              Edit
-            </button>
-
             {isReading ? (
               <button
                 type="button"
@@ -237,9 +194,31 @@ export default function BookDetailsModal({
                   beginClose();
                 }}
               >
-                Start reading
+                Start
               </button>
             )}
+
+            <button
+              type="button"
+              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-2"
+              onClick={() => {
+                onEdit(book.id);
+                beginClose();
+              }}
+            >
+              Edit
+            </button>
+
+            <button
+              type="button"
+              className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse sm:order-1"
+              onClick={() => {
+                onDelete(book.id);
+                beginClose();
+              }}
+            >
+              Delete
+            </button>
           </div>
         </div>
       </div>
