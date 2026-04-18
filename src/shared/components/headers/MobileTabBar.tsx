@@ -1,35 +1,51 @@
-import { useMotionPreferences } from '@/shared/animations';
-import { LayoutGroup, motion, type Transition } from 'framer-motion';
-import { ChartPie, Home, Library } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useMotionPreferences } from "@/shared/animations";
+import { useSmartSticky } from "@/shared/hooks/useSmartSticky";
+import { LayoutGroup, motion, type Transition } from "framer-motion";
+import { ChartPie, Home, Library } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 
 const tabs = [
-  { id: 'library', to: '/library', label: 'Library', icon: Library, end: false },
-  { id: 'home', to: '/', label: 'Home', icon: Home, end: true },
-  { id: 'stats', to: '/stats', label: 'Stats', icon: ChartPie, end: false },
+  {
+    id: "library",
+    to: "/library",
+    label: "Library",
+    icon: Library,
+    end: false,
+  },
+  { id: "home", to: "/", label: "Home", icon: Home, end: true },
+  { id: "stats", to: "/stats", label: "Stats", icon: ChartPie, end: false },
 ] as const;
 
+const COMPACT = { width: 56, gap: 6, paddingX: 6, paddingY: 6, height: 44 };
 const EXPANDED = { width: 78, gap: 8, paddingX: 8, paddingY: 8, height: 56 };
 
 export default function MobileTabBar() {
   const location = useLocation();
   const { prefersReducedMotion } = useMotionPreferences();
-  const dims = EXPANDED;
+  const { isVisible, isMobile } = useSmartSticky(location.pathname);
+  const isCompact = isMobile && !isVisible;
+  const dims = isCompact ? COMPACT : EXPANDED;
 
   const springExpand: Transition = prefersReducedMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 22, stiffness: 280, mass: 0.8 };
+    : { type: "spring", damping: 22, stiffness: 280, mass: 0.8 };
 
   const springLabel: Transition = prefersReducedMotion
     ? { duration: 0 }
-    : { type: 'spring', damping: 18, stiffness: 240, mass: 0.6 };
+    : { type: "spring", damping: 18, stiffness: 240, mass: 0.6 };
 
   return (
     <div
       className="fixed left-1/2 z-30 -translate-x-1/2 w-max pb-[env(safe-area-inset-bottom)] md:hidden select-none"
-      style={{ bottom: '1rem' }}
+      style={{ bottom: "1rem" }}
     >
-      <motion.nav className="w-max" initial={false} animate={{ y: -4 }} transition={springExpand} aria-label="Primary navigation">
+      <motion.nav
+        className="w-max"
+        initial={false}
+        animate={{ y: isCompact ? 4 : -4 }}
+        transition={springExpand}
+        aria-label="Primary navigation"
+      >
         <LayoutGroup id="mobile-tab-bar">
           <motion.div
             className="relative inline-flex items-center rounded-full border border-subtle bg-surface-elevated shadow-elevated mobile-tab-bar"
@@ -65,8 +81,8 @@ export default function MobileTabBar() {
                       animate={{
                         height: dims.height,
                         width: dims.width,
-                        paddingTop: 6,
-                        paddingBottom: 6,
+                        paddingTop: isCompact ? 4 : 6,
+                        paddingBottom: isCompact ? 4 : 6,
                         paddingLeft: 8,
                         paddingRight: 8,
                       }}
@@ -86,13 +102,18 @@ export default function MobileTabBar() {
                         <motion.span
                           aria-hidden
                           className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${
-                            isActive ? 'text-inverse' : 'text-strong'
+                            isActive ? "text-inverse" : "text-strong"
                           }`}
                           initial={false}
                           animate={{ opacity: 1 }}
                           transition={springExpand}
                         >
-                          <motion.span className="flex items-center justify-center shrink-0" initial={false} transition={springExpand}>
+                          <motion.span
+                            className="flex items-center justify-center shrink-0"
+                            initial={false}
+                            animate={{ scale: isCompact ? 1.05 : 1 }}
+                            transition={springExpand}
+                          >
                             <Icon className="h-5 w-5" aria-hidden />
                           </motion.span>
                           <motion.span
@@ -100,13 +121,16 @@ export default function MobileTabBar() {
                             className="block overflow-hidden text-center whitespace-nowrap"
                             initial={false}
                             animate={{
-                              opacity: 1,
-                              height: 14,
-                              marginTop: 4,
-                              scaleY: 1,
+                              opacity: isCompact ? 0 : 1,
+                              height: isCompact ? 0 : 14,
+                              marginTop: isCompact ? 0 : 4,
+                              scaleY: isCompact ? 0.5 : 1,
                             }}
                             transition={springLabel}
-                            style={{ fontSize: '11px', transformOrigin: 'top center' }}
+                            style={{
+                              fontSize: "11px",
+                              transformOrigin: "top center",
+                            }}
                           >
                             {tab.label}
                           </motion.span>
