@@ -1,16 +1,17 @@
-import Home from '@/features/home';
-import LibraryPage from '@/features/library';
-import StatsPage from '@/features/stats';
-import { createPageMotion } from '@/shared/animations';
-import BookEditorModal from '@/shared/components/books/BookEditorModal';
-import FinishBookModal from '@/shared/components/books/FinishBookModal';
-import AppHeader from '@/shared/components/headers/AppHeader';
-import ConfirmModal from '@/shared/components/modals/ConfirmModal';
-import { useBookStore } from '@/shared/store/books';
-import type { TargetAndTransition, Transition } from 'framer-motion';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import React, { useEffect } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import Home from "@/features/home";
+import LibraryPage from "@/features/library";
+import StatsPage from "@/features/stats";
+import SyncPage from "@/features/sync";
+import { createPageMotion } from "@/shared/animations";
+import BookEditorModal from "@/shared/components/books/BookEditorModal";
+import FinishBookModal from "@/shared/components/books/FinishBookModal";
+import AppHeader from "@/shared/components/headers/AppHeader";
+import ConfirmModal from "@/shared/components/modals/ConfirmModal";
+import { useBookStore } from "@/shared/store/books";
+import type { TargetAndTransition, Transition } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import React, { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 type PageChildProps = { pageTransitioning?: boolean };
 
@@ -26,8 +27,15 @@ const Page = ({
   transition?: Transition;
 }) => {
   return (
-    <motion.main className="w-full relative overflow-hidden" initial={initial} animate={animate} transition={transition}>
-      {React.isValidElement(children) ? React.cloneElement(children, { pageTransitioning: false }) : children}
+    <motion.main
+      className="w-full relative overflow-hidden"
+      initial={initial}
+      animate={animate}
+      transition={transition}
+    >
+      {React.isValidElement(children)
+        ? React.cloneElement(children, { pageTransitioning: false })
+        : children}
     </motion.main>
   );
 };
@@ -53,16 +61,20 @@ export default function App() {
   }, [initialize]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
   const editingBook =
-    editorState.open && editorState.mode === 'edit'
-      ? books.find((book) => book.id === editorState.bookId) ?? null
+    editorState.open && editorState.mode === "edit"
+      ? (books.find((book) => book.id === editorState.bookId) ?? null)
       : null;
-  const finishingBook = finishBookId ? books.find((book) => book.id === finishBookId) ?? null : null;
-  const deletingBook = deleteBookId ? books.find((book) => book.id === deleteBookId) ?? null : null;
+  const finishingBook = finishBookId
+    ? (books.find((book) => book.id === finishBookId) ?? null)
+    : null;
+  const deletingBook = deleteBookId
+    ? (books.find((book) => book.id === deleteBookId) ?? null)
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 sm:pb-6">
@@ -74,7 +86,11 @@ export default function App() {
             <Route
               path="/"
               element={
-                <Page initial={baseMotion.initial} animate={baseMotion.animate} transition={baseMotion.transition}>
+                <Page
+                  initial={baseMotion.initial}
+                  animate={baseMotion.animate}
+                  transition={baseMotion.transition}
+                >
                   <Home />
                 </Page>
               }
@@ -82,7 +98,11 @@ export default function App() {
             <Route
               path="/library"
               element={
-                <Page initial={baseMotion.initial} animate={baseMotion.animate} transition={baseMotion.transition}>
+                <Page
+                  initial={baseMotion.initial}
+                  animate={baseMotion.animate}
+                  transition={baseMotion.transition}
+                >
                   <LibraryPage />
                 </Page>
               }
@@ -91,8 +111,24 @@ export default function App() {
             <Route
               path="/stats"
               element={
-                <Page initial={baseMotion.initial} animate={baseMotion.animate} transition={baseMotion.transition}>
+                <Page
+                  initial={baseMotion.initial}
+                  animate={baseMotion.animate}
+                  transition={baseMotion.transition}
+                >
                   <StatsPage />
+                </Page>
+              }
+            />
+            <Route
+              path="/sync"
+              element={
+                <Page
+                  initial={baseMotion.initial}
+                  animate={baseMotion.animate}
+                  transition={baseMotion.transition}
+                >
+                  <SyncPage />
                 </Page>
               }
             />
@@ -113,16 +149,24 @@ export default function App() {
         open={Boolean(finishingBook)}
         book={finishingBook}
         onClose={closeFinish}
-        onSave={(values) => (finishingBook ? finishBook(finishingBook.id, values) : Promise.resolve())}
+        onSave={(values) =>
+          finishingBook
+            ? finishBook(finishingBook.id, values)
+            : Promise.resolve()
+        }
       />
 
       <ConfirmModal
         open={Boolean(deletingBook)}
         onClose={closeDelete}
-        onConfirm={() => (deletingBook ? deleteBook(deletingBook.id) : undefined)}
+        onConfirm={() =>
+          deletingBook ? deleteBook(deletingBook.id) : undefined
+        }
         destructive
         title="Delete book?"
-        message={deletingBook ? `Remove "${deletingBook.title}" from Lectum.` : ''}
+        message={
+          deletingBook ? `Remove "${deletingBook.title}" from Lectum.` : ""
+        }
         confirmLabel="Delete"
       />
     </div>

@@ -9,12 +9,13 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 export default function AppHeader() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openCreate = useBookStore((state) => state.openCreate);
   const location = useLocation();
+  const navigate = useNavigate();
   const navLinkBase =
     "rounded-lg border border-subtle px-3 text-sm transition-colors duration-150 ease-in-out inline-flex items-center gap-2 h-10";
 
@@ -104,6 +105,9 @@ export default function AppHeader() {
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        onManageSync={() => {
+          if (location.pathname !== "/sync") navigate("/sync");
+        }}
       />
     </>
   );

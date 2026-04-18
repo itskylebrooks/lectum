@@ -1,10 +1,13 @@
-import { usePWA } from '@/shared/hooks/usePWA';
-import ConfirmModal from '@/shared/components/modals/ConfirmModal';
-import { STORAGE_KEYS } from '@/shared/constants/storageKeys';
-import { useBookStore } from '@/shared/store/books';
-import { usePreferencesStore } from '@/shared/store/preferences';
-import useThemeStore from '@/shared/store/theme';
-import { buildExportPayload, parseImportPayload } from '@/shared/utils/dataTransfer';
+import ConfirmModal from "@/shared/components/modals/ConfirmModal";
+import { STORAGE_KEYS } from "@/shared/constants/storageKeys";
+import { usePWA } from "@/shared/hooks/usePWA";
+import { useBookStore } from "@/shared/store/books";
+import { usePreferencesStore } from "@/shared/store/preferences";
+import useThemeStore from "@/shared/store/theme";
+import {
+  buildExportPayload,
+  parseImportPayload,
+} from "@/shared/utils/dataTransfer";
 import {
   ChevronDown,
   Dot,
@@ -12,18 +15,23 @@ import {
   Share2,
   SquareArrowOutUpRight,
   X,
-} from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
+  onManageSync?: () => void;
 }
 
-const APP_VERSION = '0.5.0';
+const APP_VERSION = "0.5.0";
 
-export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+export default function SettingsModal({
+  open,
+  onClose,
+  onManageSync,
+}: SettingsModalProps) {
   const [visible, setVisible] = useState(open);
   const [closing, setClosing] = useState(false);
   const [entering, setEntering] = useState(false);
@@ -43,14 +51,16 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const setDateFormat = usePreferencesStore((state) => state.setDateFormat);
   const mode = useThemeStore((state) => state.mode);
   const setMode = useThemeStore((state) => state.setMode);
-  const isSystemTheme = mode === 'system';
+  const isSystemTheme = mode === "system";
   const { isInstalled, canInstall, install } = usePWA();
 
   function isMacSafari() {
     try {
-      const ua = navigator.userAgent || '';
-      const isMac = /Macintosh|Mac OS X/.test(navigator.platform) || /Macintosh/.test(ua);
-      const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox/.test(ua);
+      const ua = navigator.userAgent || "";
+      const isMac =
+        /Macintosh|Mac OS X/.test(navigator.platform) || /Macintosh/.test(ua);
+      const isSafari =
+        /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox/.test(ua);
       return isMac && isSafari;
     } catch {
       return false;
@@ -93,7 +103,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   useEffect(() => {
     if (!visible) return;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
@@ -112,35 +122,35 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'Esc') beginClose();
+      if (event.key === "Escape" || event.key === "Esc") beginClose();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [beginClose, open]);
 
   async function handleShare() {
-    const shareUrl = 'https://lectum.wiki/';
+    const shareUrl = "https://lectum.wiki/";
     try {
       const shareData: ShareData = {
-        title: 'Lectum',
-        text: 'Check out Lectum — a minimalist reading tracker',
+        title: "Lectum",
+        text: "Check out Lectum — a minimalist reading tracker",
         url: shareUrl,
       };
       const navWithShare = navigator as Navigator & {
         share?: (data: ShareData) => Promise<void>;
       };
-      if (typeof navWithShare.share === 'function') {
+      if (typeof navWithShare.share === "function") {
         await navWithShare.share(shareData);
         return;
       }
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
-        setStatusMessage('Link copied.');
+        setStatusMessage("Link copied.");
         return;
       }
-      window.prompt('Copy this link', shareUrl);
+      window.prompt("Copy this link", shareUrl);
     } catch {
-      setStatusMessage('Share unavailable.');
+      setStatusMessage("Share unavailable.");
     }
   }
 
@@ -155,9 +165,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         },
       });
       const json = JSON.stringify(payload, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       const now = new Date().toISOString().slice(0, 10);
       link.href = url;
       link.download = `lectum-export-${now}.json`;
@@ -165,9 +175,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setStatusMessage('Export complete.');
+      setStatusMessage("Export complete.");
     } catch {
-      setStatusMessage('Export failed.');
+      setStatusMessage("Export failed.");
     } finally {
       setExporting(false);
     }
@@ -183,9 +193,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
       const parsed = parseImportPayload(text);
       if (!parsed.ok) {
         setStatusMessage(
-          parsed.reason === 'not_lectum'
-            ? 'That file is not a Lectum export.'
-            : 'Import failed. Check the file and try again.',
+          parsed.reason === "not_lectum"
+            ? "That file is not a Lectum export."
+            : "Import failed. Check the file and try again.",
         );
         return;
       }
@@ -194,11 +204,11 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
       setMode(parsed.payload.settings.themeMode);
       setDateFormat(parsed.payload.settings.dateFormat);
       setStatusMessage(
-        `Imported ${parsed.payload.books.length} ${parsed.payload.books.length === 1 ? 'book' : 'books'}.`,
+        `Imported ${parsed.payload.books.length} ${parsed.payload.books.length === 1 ? "book" : "books"}.`,
       );
     } finally {
       setImporting(false);
-      event.target.value = '';
+      event.target.value = "";
     }
   }
 
@@ -206,15 +216,23 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     fileRef.current?.click();
   }
 
-  function handleSyncInfo() {
-    setStatusMessage('Sync is planned for a later Lectum release.');
+  function handleManageSync() {
+    if (!onManageSync) {
+      setStatusMessage("Sync is planned for a later Lectum release.");
+      return;
+    }
+
+    beginClose();
+    window.setTimeout(() => {
+      onManageSync();
+    }, 300);
   }
 
   async function handleEraseData() {
     try {
       await useBookStore.getState().importBooks([]);
-      usePreferencesStore.getState().setDateFormat('DMY');
-      useThemeStore.getState().setMode('system');
+      usePreferencesStore.getState().setDateFormat("DMY");
+      useThemeStore.getState().setMode("system");
       localStorage.removeItem(STORAGE_KEYS.PREFERENCES);
       localStorage.removeItem(STORAGE_KEYS.THEME_STORE);
       localStorage.removeItem(STORAGE_KEYS.THEME_MODE);
@@ -223,8 +241,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
       setConfirmClearOpen(false);
       beginClose();
     } catch (error) {
-      console.error('Failed to erase Lectum data', error);
-      setStatusMessage('Erase failed.');
+      console.error("Failed to erase Lectum data", error);
+      setStatusMessage("Erase failed.");
       setConfirmClearOpen(false);
     }
   }
@@ -236,16 +254,16 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-title"
-      className={`fixed inset-0 z-[80] flex flex-col items-center p-5 transition-colors duration-200 ${closing || entering ? 'bg-transparent' : 'bg-overlay backdrop-blur-sm'}`}
+      className={`fixed inset-0 z-[80] flex flex-col items-center p-5 transition-colors duration-200 ${closing || entering ? "bg-transparent" : "bg-overlay backdrop-blur-sm"}`}
       onClick={beginClose}
     >
       <div className="flex-[4] min-h-[40px] pointer-events-none" />
       <div
-        className={`w-full max-w-sm rounded-2xl bg-surface-elevated p-6 pt-3 shadow-elevated ring-1 ring-black/5 dark:ring-neutral-700/5 border border-subtle overflow-y-auto relative transition-all duration-200 ${closing || entering ? 'opacity-0 scale-[0.95] translate-y-1' : 'opacity-100 scale-100 translate-y-0'}`}
+        className={`w-full max-w-sm rounded-2xl bg-surface-elevated p-6 pt-3 shadow-elevated ring-1 ring-black/5 dark:ring-neutral-700/5 border border-subtle overflow-y-auto relative transition-all duration-200 ${closing || entering ? "opacity-0 scale-[0.95] translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
         style={{
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
-          maxHeight: 'min(720px, 90vh)',
+          WebkitOverflowScrolling: "touch",
+          paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
+          maxHeight: "min(720px, 90vh)",
         }}
         onClick={(event) => event.stopPropagation()}
       >
@@ -266,7 +284,10 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               <div />
             </div>
 
-            <span id="settings-title" className="text-lg font-semibold tracking-wide text-strong text-center">
+            <span
+              id="settings-title"
+              className="text-lg font-semibold tracking-wide text-strong text-center"
+            >
               Settings
             </span>
 
@@ -295,8 +316,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                 <div />
                 <button
                   type="button"
-                  onClick={() => setMode('system')}
-                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${isSystemTheme ? 'bg-accent text-inverse shadow-elevated' : 'text-muted hover-nonaccent'}`}
+                  onClick={() => setMode("system")}
+                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${isSystemTheme ? "bg-accent text-inverse shadow-elevated" : "text-muted hover-nonaccent"}`}
                   aria-pressed={isSystemTheme}
                   aria-label="System"
                   title="System"
@@ -321,9 +342,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               <div className="grid grid-cols-2 gap-2 whitespace-nowrap">
                 <button
                   type="button"
-                  onClick={() => setMode('light')}
-                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${!isSystemTheme && mode === 'light' ? 'bg-accent text-inverse shadow-elevated' : 'text-muted hover-nonaccent'}`}
-                  aria-pressed={!isSystemTheme && mode === 'light'}
+                  onClick={() => setMode("light")}
+                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${!isSystemTheme && mode === "light" ? "bg-accent text-inverse shadow-elevated" : "text-muted hover-nonaccent"}`}
+                  aria-pressed={!isSystemTheme && mode === "light"}
                   aria-label="Light"
                   title="Light"
                 >
@@ -346,9 +367,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
                 <button
                   type="button"
-                  onClick={() => setMode('dark')}
-                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${!isSystemTheme && mode === 'dark' ? 'bg-accent text-inverse shadow-elevated' : 'text-muted hover-nonaccent'}`}
-                  aria-pressed={!isSystemTheme && mode === 'dark'}
+                  onClick={() => setMode("dark")}
+                  className={`grid h-10 w-full place-items-center rounded-lg border border-subtle transition ${!isSystemTheme && mode === "dark" ? "bg-accent text-inverse shadow-elevated" : "text-muted hover-nonaccent"}`}
+                  aria-pressed={!isSystemTheme && mode === "dark"}
                   aria-label="Dark"
                   title="Dark"
                 >
@@ -380,7 +401,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                   aria-label="Date format"
                   className="appearance-none w-full rounded-lg border border-subtle bg-transparent px-3 h-10 pr-7 text-sm text-strong"
                   value={dateFormat}
-                  onChange={(event) => setDateFormat(event.target.value as 'MDY' | 'DMY')}
+                  onChange={(event) =>
+                    setDateFormat(event.target.value as "MDY" | "DMY")
+                  }
                 >
                   <option value="MDY">MM/DD</option>
                   <option value="DMY">DD/MM</option>
@@ -412,8 +435,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                 aria-disabled={isInstalled}
                 className={`w-full flex items-center justify-center gap-1.5 rounded-lg h-10 px-3 text-xs font-medium transition-colors whitespace-nowrap ${
                   isInstalled
-                    ? 'cursor-not-allowed border border-subtle text-muted opacity-60'
-                    : 'bg-accent text-inverse hover:opacity-90'
+                    ? "cursor-not-allowed border border-subtle text-muted opacity-60"
+                    : "bg-accent text-inverse hover:opacity-90"
                 }`}
               >
                 <svg
@@ -431,7 +454,7 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                {isInstalled ? 'Installed' : 'Install'}
+                {isInstalled ? "Installed" : "Install"}
               </button>
             </div>
           </div>
@@ -514,10 +537,14 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               </div>
               <button
                 type="button"
-                onClick={handleSyncInfo}
+                onClick={handleManageSync}
                 className="w-full h-10 flex items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-medium border border-subtle text-strong hover:bg-subtle transition whitespace-nowrap"
               >
-                <Dot className="h-6 w-6 shrink-0 text-muted" strokeWidth={6} aria-hidden />
+                <Dot
+                  className="h-6 w-6 shrink-0 text-muted"
+                  strokeWidth={6}
+                  aria-hidden
+                />
                 <span>Manage</span>
               </button>
             </div>
@@ -651,8 +678,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         message={
           <div className="text-sm text-strong">
             <p>
-              To add Lectum to your Dock: click the <strong>Share</strong> button in Safari and
-              choose <strong>Add to Dock</strong>.
+              To add Lectum to your Dock: click the <strong>Share</strong>{" "}
+              button in Safari and choose <strong>Add to Dock</strong>.
             </p>
           </div>
         }
@@ -667,8 +694,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         message={
           <div className="text-sm text-strong">
             <p>
-              Install is not available here. Try switching to a supported browser such as Chrome,
-              Edge, or Safari, or exit incognito/private mode.
+              Install is not available here. Try switching to a supported
+              browser such as Chrome, Edge, or Safari, or exit incognito/private
+              mode.
             </p>
           </div>
         }
