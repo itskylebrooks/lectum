@@ -1,61 +1,22 @@
-import { desktopDropdownVariants } from "@/shared/animations";
 import MobileTabBar from "@/shared/components/headers/MobileTabBar";
 import SettingsModal from "@/shared/components/modals/SettingsModal";
 import { useBookStore } from "@/shared/store/books";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ChartPie,
-  ChevronDown,
   Home,
   Library,
   PlusCircle,
   Settings as SettingsIcon,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
 export default function AppHeader() {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const openCreate = useBookStore((state) => state.openCreate);
-  const moreRef = useRef<HTMLDivElement | null>(null);
-  const moreButtonRef = useRef<HTMLButtonElement | null>(null);
   const location = useLocation();
-  const isLibrary = location.pathname === "/library";
   const navLinkBase =
     "rounded-lg border border-subtle px-3 text-sm transition-colors duration-150 ease-in-out inline-flex items-center gap-2 h-10";
-
-  useEffect(() => {
-    if (!moreOpen) return;
-
-    const handleClick = (event: MouseEvent | TouchEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (
-        moreRef.current?.contains(target) ||
-        moreButtonRef.current?.contains(target)
-      )
-        return;
-      setMoreOpen(false);
-    };
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMoreOpen(false);
-        moreButtonRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("touchstart", handleClick);
-    window.addEventListener("keydown", handleKey);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("touchstart", handleClick);
-      window.removeEventListener("keydown", handleKey);
-    };
-  }, [moreOpen]);
 
   return (
     <>
@@ -115,67 +76,26 @@ export default function AppHeader() {
           </ul>
         </nav>
 
-        <div className="relative flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <button
-            ref={moreButtonRef}
             type="button"
-            onClick={() => setMoreOpen((open) => !open)}
-            className="rounded-lg border border-subtle px-3 text-sm inline-flex items-center gap-2 h-10 transition-colors duration-150 hover-nonaccent"
-            aria-haspopup="menu"
-            aria-expanded={moreOpen}
-            aria-label="Open menu"
+            onClick={() => {
+              openCreate(location.pathname === "/" ? "reading" : "next");
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-subtle transition-colors duration-150 hover-nonaccent"
+            aria-label="Add book"
           >
-            <ChevronDown className="w-4 h-4" />
+            <PlusCircle className="w-4 h-4" />
           </button>
 
-          <AnimatePresence>
-            {moreOpen ? (
-              <motion.div
-                ref={moreRef}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={desktopDropdownVariants}
-                className="absolute right-0 top-full mt-2 w-44 rounded-lg border border-subtle bg-surface-elevated text-strong shadow-elevated z-30"
-              >
-                <ul className="p-2">
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        openCreate(
-                          location.pathname === "/" ? "reading" : "next",
-                        );
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-md text-strong transition-colors duration-150 hover-nonaccent"
-                    >
-                      <span className="flex items-center gap-2">
-                        <PlusCircle className="w-4 h-4" />
-                        Add book
-                      </span>
-                    </button>
-                  </li>
-
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        setSettingsOpen(true);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-md text-strong transition-colors duration-150 hover-nonaccent"
-                    >
-                      <span className="flex items-center gap-2">
-                        <SettingsIcon className="w-4 h-4" />
-                        Settings
-                      </span>
-                    </button>
-                  </li>
-                </ul>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-subtle transition-colors duration-150 hover-nonaccent"
+            aria-label="Settings"
+          >
+            <SettingsIcon className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
