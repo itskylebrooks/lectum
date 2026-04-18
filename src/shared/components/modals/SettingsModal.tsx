@@ -243,7 +243,7 @@ export default function SettingsModal({
 
   async function handleEraseData() {
     try {
-      await useBookStore.getState().importBooks([]);
+      await useBookStore.getState().resetToStarterBooks();
       usePreferencesStore.getState().setDateFormat("DMY");
       useThemeStore.getState().setMode("system");
       localStorage.removeItem(STORAGE_KEYS.PREFERENCES);
