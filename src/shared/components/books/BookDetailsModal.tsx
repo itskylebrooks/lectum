@@ -6,7 +6,6 @@ import {
   formatBookCategoryLabel,
   formatBookFormatLabel,
   formatBookRatingLabel,
-  RATING_META,
 } from "@/shared/utils/bookPresentation";
 import { formatDisplayDate } from "@/shared/utils/date";
 import { X } from "lucide-react";
@@ -150,12 +149,12 @@ export default function BookDetailsModal({
                 <BookBadge tone="neutral">
                   {formatBookFormatLabel(book.format)}
                 </BookBadge>
-                <BookBadge tone="soft">
+                <BookBadge tone="neutral">
                   {formatBookCategoryLabel(book.category)}
                 </BookBadge>
                 <BookBadge tone="neutral">{book.publicationYear}</BookBadge>
                 {isFinished && (
-                  <BookBadge tone={RATING_META[rating].tone}>
+                  <BookBadge tone="neutral">
                     {formatBookRatingLabel(rating)}
                   </BookBadge>
                 )}
@@ -186,7 +185,7 @@ export default function BookDetailsModal({
           </div>
 
           {/* Buttons Below All Columns */}
-          <div className="space-y-2 mt-6">
+          <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <button
               type="button"
               className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"

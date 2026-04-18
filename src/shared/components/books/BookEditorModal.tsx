@@ -6,7 +6,11 @@ import type {
   BookFormStatus,
   BookWithThumbnail,
 } from "@/shared/types";
-import { ChevronDown, Upload, X } from "lucide-react";
+import {
+  formatBookCategoryLabel,
+  formatBookFormatLabel,
+} from "@/shared/utils/bookPresentation";
+import { Upload, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -218,77 +222,119 @@ export default function BookEditorModal({
           </div>
 
           <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1">
-                <span className="text-sm text-muted">Title</span>
-                <input
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                  placeholder="The Left Hand of Darkness"
-                />
-              </label>
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1">
+                  <span className="text-sm text-muted">Title</span>
+                  <input
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                    placeholder="The Left Hand of Darkness"
+                  />
+                </label>
 
-              <label className="space-y-1">
-                <span className="text-sm text-muted">Author</span>
-                <input
-                  value={author}
-                  onChange={(event) => setAuthor(event.target.value)}
-                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                  placeholder="Ursula K. Le Guin"
-                />
-              </label>
+                <label className="space-y-1">
+                  <span className="text-sm text-muted">Author</span>
+                  <input
+                    value={author}
+                    onChange={(event) => setAuthor(event.target.value)}
+                    className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                    placeholder="Ursula K. Le Guin"
+                  />
+                </label>
+              </div>
 
-              <label className="space-y-1">
-                <span className="text-sm text-muted">Publication year</span>
-                <input
-                  value={publicationYear}
-                  onChange={(event) => setPublicationYear(event.target.value)}
-                  inputMode="numeric"
-                  className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
-                  placeholder="1969"
-                />
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1">
+                  <span className="text-sm text-muted">Publication year</span>
+                  <input
+                    value={publicationYear}
+                    onChange={(event) => setPublicationYear(event.target.value)}
+                    inputMode="numeric"
+                    className="w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 text-sm text-strong outline-none ring-0 placeholder:text-muted focus:border-accent"
+                    placeholder="1969"
+                  />
+                </label>
 
-              <label className="space-y-1">
-                <span className="text-sm text-muted">Format</span>
-                <div className="relative">
-                  <select
-                    value={format}
-                    onChange={(event) =>
-                      setFormat(event.target.value as BookFormat)
-                    }
-                    className="appearance-none w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 pr-9 text-sm text-strong outline-none ring-0 focus:border-accent"
-                  >
-                    {formats.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
+                {!isFinishedBook ? (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted">Status</p>
+                    <div className="grid w-full grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setStatus("next")}
+                        className={`rounded-xl border px-2.5 py-2 text-left transition ${
+                          status === "next"
+                            ? "border-subtle bg-accent text-inverse shadow-elevated"
+                            : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold">
+                          Next
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatus("reading")}
+                        className={`rounded-xl border px-2.5 py-2 text-left transition ${
+                          status === "reading"
+                            ? "border-subtle bg-accent text-inverse shadow-elevated"
+                            : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold">
+                          Reading
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1">
+                  <span className="text-sm text-muted">Category</span>
+                  <div className="mt-1 flex gap-2">
+                    {categories.map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setCategory(value)}
+                        className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
+                          category === value
+                            ? "bg-accent text-inverse shadow-elevated hover-accent-fade"
+                            : "bg-surface-elevated text-muted hover-nonaccent"
+                        }`}
+                      >
+                        {formatBookCategoryLabel(value)}
+                      </button>
                     ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                </div>
-              </label>
+                  </div>
+                </label>
 
-              <label className="space-y-1">
-                <span className="text-sm text-muted">Category</span>
-                <div className="mt-1 flex gap-2">
-                  {categories.map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setCategory(value)}
-                      className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
-                        category === value
-                          ? "bg-accent text-inverse shadow-elevated hover-accent-fade"
-                          : "bg-surface-elevated text-muted hover-nonaccent"
-                      }`}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
-              </label>
+                <label className="space-y-1">
+                  <span className="text-sm text-muted">Format</span>
+                  <div className="mt-1 grid grid-cols-3 gap-2">
+                    {formats.map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setFormat(value)}
+                        className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
+                          format === value
+                            ? "bg-accent text-inverse shadow-elevated hover-accent-fade"
+                            : "bg-surface-elevated text-muted hover-nonaccent"
+                        }`}
+                      >
+                        {formatBookFormatLabel(value)}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+              </div>
 
               <div className="space-y-2">
                 <span className="block text-sm text-muted">Thumbnail</span>
@@ -332,36 +378,6 @@ export default function BookEditorModal({
                 </div>
               </div>
             </div>
-
-            {!isFinishedBook ? (
-              <div className="space-y-2">
-                <p className="text-sm text-muted">Status</p>
-                <div className="grid w-full grid-cols-2 gap-2 sm:max-w-[calc(50%-0.375rem)]">
-                  <button
-                    type="button"
-                    onClick={() => setStatus("next")}
-                    className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                      status === "next"
-                        ? "border-subtle bg-accent text-inverse shadow-elevated"
-                        : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold">Next</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatus("reading")}
-                    className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                      status === "reading"
-                        ? "border-subtle bg-accent text-inverse shadow-elevated"
-                        : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold">Reading</span>
-                  </button>
-                </div>
-              </div>
-            ) : null}
 
             {error ? <p className="text-sm text-danger">{error}</p> : null}
 
