@@ -26,7 +26,7 @@ export default function Home() {
         </div>
 
         {readingBooks.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
+          <div className="rounded-2xl border border-subtle bg-surface p-8 text-center">
             <p className="text-lg font-medium text-strong">
               Nothing marked as reading yet.
             </p>
@@ -50,7 +50,7 @@ export default function Home() {
         </div>
 
         {nextBooks.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
+          <div className="rounded-2xl border border-subtle bg-surface p-8 text-center">
             <p className="text-lg font-medium text-strong">
               Nothing waiting in your next list.
             </p>

@@ -244,7 +244,7 @@ export default function StatsPage() {
 
   if (stats.finished.length === 0) {
     return (
-      <div className="mt-4 rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
+      <div className="mt-4 rounded-2xl border border-subtle bg-surface p-8 text-center">
         <p className="text-lg font-medium text-strong">
           Stats appear once you finish books.
         </p>

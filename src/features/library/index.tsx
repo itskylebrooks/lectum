@@ -133,7 +133,7 @@ export default function LibraryPage() {
 
       <section className="space-y-4">
         {filteredBooks.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
+          <div className="rounded-2xl border border-subtle bg-surface p-8 text-center">
             <p className="text-lg font-medium text-strong">
               No finished books match the current filters.
             </p>
