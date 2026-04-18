@@ -14,17 +14,16 @@ export default function BookThumbnailCard({
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-block rounded-2xl overflow-hidden transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-contrast"
+      className="group relative inline-block rounded-2xl overflow-hidden transform-gpu motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out hover:-translate-y-1 motion-reduce:transition-none motion-reduce:transform-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-contrast"
+      style={{ willChange: "transform" }}
       aria-label={`Open ${book.title} by ${book.author}`}
     >
-      <div className="transition-transform duration-200 group-hover:scale-105 origin-center">
-        <BookCover
-          title={book.title}
-          author={book.author}
-          thumbnailDataUrl={book.thumbnailDataUrl}
-          className="h-60 w-44 shadow-sm group-hover:shadow-elevated transition-shadow duration-200"
-        />
-      </div>
+      <BookCover
+        title={book.title}
+        author={book.author}
+        thumbnailDataUrl={book.thumbnailDataUrl}
+        className="h-60 w-44 shadow-sm group-hover:shadow-elevated transition-shadow duration-200"
+      />
     </button>
   );
 }
