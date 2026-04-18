@@ -22,6 +22,7 @@ export default function BookThumbnailCard({
         title={book.title}
         author={book.author}
         thumbnailDataUrl={book.thumbnailDataUrl}
+        accentSeed={book.id}
         className="h-[15.25rem] w-[10.9375rem] shadow-sm group-hover:shadow-elevated transition-shadow duration-200"
       />
     </button>

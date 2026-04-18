@@ -95,8 +95,9 @@ export default function BookDetailsModal({
   if (!visible || !book) return null;
 
   const isReading = book.isReading;
-  const isFinished = Boolean(book.dateFinished);
-  const rating = book.rating;
+  const finishedDate = book.dateFinished ?? null;
+  const isFinished = Boolean(finishedDate);
+  const rating = book.rating ?? null;
 
   return createPortal(
     <div
@@ -138,20 +139,23 @@ export default function BookDetailsModal({
                 title={book.title}
                 author={book.author}
                 thumbnailDataUrl={book.thumbnailDataUrl}
+                accentSeed={book.id}
                 className="h-64 w-44 shadow-sm"
               />
             </div>
 
             <div className="space-y-2 text-sm text-muted">
-              {isFinished && (
+              {isFinished && finishedDate ? (
                 <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-strong">
-                  <span>
-                    {formatDisplayDate(book.dateFinished, dateFormat)}
-                  </span>
-                  <span aria-hidden="true">•</span>
-                  <span>{formatBookRatingLabel(rating)}</span>
+                  <span>{formatDisplayDate(finishedDate, dateFormat)}</span>
+                  {rating ? (
+                    <>
+                      <span aria-hidden="true">•</span>
+                      <span>{formatBookRatingLabel(rating)}</span>
+                    </>
+                  ) : null}
                 </div>
-              )}
+              ) : null}
 
               {isReading && (
                 <div>

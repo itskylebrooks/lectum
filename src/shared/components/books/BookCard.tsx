@@ -48,6 +48,7 @@ export default function BookCard({
           title={book.title}
           author={book.author}
           thumbnailDataUrl={book.thumbnailDataUrl}
+          accentSeed={book.id}
           className="h-40 w-28 shadow-sm"
         />
         <div className="mt-4 min-w-0 w-full">
