@@ -22,7 +22,7 @@ export default function BookThumbnailCard({
         title={book.title}
         author={book.author}
         thumbnailDataUrl={book.thumbnailDataUrl}
-        className="h-60 w-44 shadow-sm group-hover:shadow-elevated transition-shadow duration-200"
+        className="h-[15.25rem] w-[10.9375rem] shadow-sm group-hover:shadow-elevated transition-shadow duration-200"
       />
     </button>
   );

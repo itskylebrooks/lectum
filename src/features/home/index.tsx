@@ -32,7 +32,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
             {readingBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}
@@ -56,7 +56,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
             {nextBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}

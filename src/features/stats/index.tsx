@@ -5,9 +5,31 @@ import {
   formatBookFormatLabel,
   formatBookRatingLabel,
 } from "@/shared/utils/bookPresentation";
-import { formatMonthLabel, formatYearLabel } from "@/shared/utils/date";
+import { formatMonthLabel } from "@/shared/utils/date";
 import { buildFinishedBookStats } from "@/shared/utils/stats";
-import { BookOpen, CalendarDays, Users } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+const MONTH_KEYS = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+];
 
 function BarList({
   items,
@@ -46,9 +68,179 @@ function BarList({
   );
 }
 
+function MonthColumnChart({
+  items,
+}: {
+  items: { label: string; count: number }[];
+}) {
+  const max = Math.max(...items.map((item) => item.count), 1);
+
+  return (
+    <div className="grid grid-cols-12 gap-2">
+      {items.map((item) => {
+        const monthLabel = formatMonthLabel(item.label).split(" ")[0];
+        const heightPercent =
+          item.count === 0 ? 0 : Math.max((item.count / max) * 100, 8);
+
+        return (
+          <div
+            key={item.label}
+            className="flex min-w-0 flex-col items-center gap-1"
+          >
+            <div className="relative h-36 w-full">
+              {item.count > 0 ? (
+                <>
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 tabular-nums text-[11px] leading-none text-muted"
+                    style={{ bottom: `calc(${heightPercent}% + 4px)` }}
+                  >
+                    {item.count}
+                  </span>
+                  <div
+                    className="absolute inset-x-0 bottom-0 rounded-md bg-progress"
+                    style={{ height: `${heightPercent}%` }}
+                  />
+                </>
+              ) : (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 tabular-nums text-[11px] leading-none text-muted">
+                  0
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted">{monthLabel}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DecadeColumnChart({
+  items,
+}: {
+  items: { label: string; count: number }[];
+}) {
+  const max = Math.max(...items.map((item) => item.count), 1);
+
+  return (
+    <div className="grid grid-cols-5 gap-2 lg:grid-cols-10">
+      {items.map((item) => {
+        const heightPercent =
+          item.count === 0 ? 0 : Math.max((item.count / max) * 100, 8);
+
+        return (
+          <div
+            key={item.label}
+            className="flex min-w-0 flex-col items-center gap-1"
+          >
+            <div className="relative h-36 w-full">
+              {item.count > 0 ? (
+                <>
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 tabular-nums text-[11px] leading-none text-muted"
+                    style={{ bottom: `calc(${heightPercent}% + 4px)` }}
+                  >
+                    {item.count}
+                  </span>
+                  <div
+                    className="absolute inset-x-0 bottom-0 rounded-md bg-progress"
+                    style={{ height: `${heightPercent}%` }}
+                  />
+                </>
+              ) : (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 tabular-nums text-[11px] leading-none text-muted">
+                  0
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted">{item.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StatsPage() {
   const books = useBookStore((state) => state.books);
   const stats = buildFinishedBookStats(books);
+
+  const availableYears = useMemo(
+    () => stats.perYear.map((item) => Number(item.label)).sort((a, b) => a - b),
+    [stats.perYear],
+  );
+  const latestYear =
+    availableYears[availableYears.length - 1] ?? new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(latestYear);
+
+  useEffect(() => {
+    setSelectedYear(latestYear);
+  }, [latestYear]);
+
+  const monthCountByLabel = useMemo(
+    () => new Map(stats.perMonth.map((item) => [item.label, item.count])),
+    [stats.perMonth],
+  );
+
+  const monthsForSelectedYear = useMemo(() => {
+    return MONTH_KEYS.map((monthKey) => {
+      const label = `${selectedYear}-${monthKey}`;
+      return {
+        label,
+        count: monthCountByLabel.get(label) ?? 0,
+      };
+    });
+  }, [monthCountByLabel, selectedYear]);
+
+  const selectedYearTotal =
+    stats.perYear.find((item) => Number(item.label) === selectedYear)?.count ??
+    0;
+  const selectedYearIndex = availableYears.indexOf(selectedYear);
+  const currentYear = new Date().getFullYear();
+  const finishedThisYear =
+    stats.perYear.find((item) => Number(item.label) === currentYear)?.count ??
+    0;
+
+  const centuryGroups = useMemo(() => {
+    const groups = new Map<number, { label: string; count: number }[]>();
+
+    for (const item of stats.decadeSpread) {
+      const decade = Number.parseInt(item.label, 10);
+      if (Number.isNaN(decade)) continue;
+      const century = Math.floor(decade / 100) * 100;
+      const existing = groups.get(century) ?? [];
+      existing.push(item);
+      groups.set(century, existing);
+    }
+
+    return [...groups.entries()]
+      .map(([century, items]) => ({
+        century,
+        items: items.sort((left, right) =>
+          left.label.localeCompare(right.label),
+        ),
+      }))
+      .sort((left, right) => left.century - right.century);
+  }, [stats.decadeSpread]);
+
+  const availableCenturies = centuryGroups.map((group) => group.century);
+  const latestCentury =
+    availableCenturies[availableCenturies.length - 1] ??
+    Math.floor(new Date().getFullYear() / 100) * 100;
+  const [selectedCentury, setSelectedCentury] = useState<number>(latestCentury);
+
+  useEffect(() => {
+    setSelectedCentury(latestCentury);
+  }, [latestCentury]);
+
+  const selectedCenturyIndex = availableCenturies.indexOf(selectedCentury);
+  const selectedCenturyItems =
+    centuryGroups.find((group) => group.century === selectedCentury)?.items ??
+    [];
+  const selectedCenturyTotal = selectedCenturyItems.reduce(
+    (sum, item) => sum + item.count,
+    0,
+  );
 
   if (stats.finished.length === 0) {
     return (
@@ -73,12 +265,8 @@ export default function StatsPage() {
           icon={BookOpen}
         />
         <StatCard
-          label="Finished this year"
-          value={
-            stats.perYear.find(
-              (item) => item.label === String(new Date().getFullYear()),
-            )?.count ?? 0
-          }
+          label={`Finished in ${currentYear}`}
+          value={finishedThisYear}
           icon={CalendarDays}
         />
         <StatCard
@@ -88,32 +276,58 @@ export default function StatsPage() {
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4">
         <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
-          <h2 className="text-lg font-semibold text-strong">Books per month</h2>
-          <div className="mt-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-strong">
+              Books per month (Total: {selectedYearTotal})
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <button
+                type="button"
+                aria-label="Previous year"
+                onClick={() => {
+                  if (selectedYearIndex > 0)
+                    setSelectedYear(availableYears[selectedYearIndex - 1]);
+                }}
+                disabled={selectedYearIndex <= 0}
+                className="rounded-xl border border-subtle p-1 hover-nonaccent disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="tabular-nums text-strong">{selectedYear}</span>
+              <button
+                type="button"
+                aria-label="Next year"
+                onClick={() => {
+                  if (selectedYearIndex < availableYears.length - 1)
+                    setSelectedYear(availableYears[selectedYearIndex + 1]);
+                }}
+                disabled={
+                  selectedYearIndex < 0 ||
+                  selectedYearIndex >= availableYears.length - 1
+                }
+                className="rounded-xl border border-subtle p-1 hover-nonaccent disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 sm:hidden">
             <BarList
-              items={stats.perMonth}
+              items={monthsForSelectedYear}
               formatLabel={formatMonthLabel}
               compact
               showBars={false}
             />
           </div>
-        </div>
-        <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
-          <h2 className="text-lg font-semibold text-strong">Books per year</h2>
-          <div className="mt-4">
-            <BarList
-              items={stats.perYear}
-              formatLabel={formatYearLabel}
-              compact
-              showBars={false}
-            />
+          <div className="mt-7 hidden sm:block">
+            <MonthColumnChart items={monthsForSelectedYear} />
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
           <h2 className="text-lg font-semibold text-strong">Ratings</h2>
           <div className="mt-4">
@@ -173,7 +387,7 @@ export default function StatsPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-4">
         <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
           <h2 className="text-lg font-semibold text-strong">
             Most-read authors
@@ -182,7 +396,7 @@ export default function StatsPage() {
             {stats.topAuthors.map((author) => (
               <div
                 key={author.author}
-                className="flex items-center justify-between border-b border-subtle/70 pb-3 last:border-b-0 last:pb-0"
+                className="flex items-center justify-between"
               >
                 <span className="text-strong">{author.author}</span>
                 <span>{author.count}</span>
@@ -190,12 +404,56 @@ export default function StatsPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-4">
         <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
-          <h2 className="text-lg font-semibold text-strong">
-            Publication decades
-          </h2>
-          <div className="mt-4">
-            <BarList items={stats.decadeSpread} compact />
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-strong">
+              Publication decades (Total: {selectedCenturyTotal})
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <button
+                type="button"
+                aria-label="Previous hundred years"
+                onClick={() => {
+                  if (selectedCenturyIndex > 0)
+                    setSelectedCentury(
+                      availableCenturies[selectedCenturyIndex - 1],
+                    );
+                }}
+                disabled={selectedCenturyIndex <= 0}
+                className="rounded-xl border border-subtle p-1 hover-nonaccent disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="tabular-nums text-strong">
+                {selectedCentury}
+              </span>
+              <button
+                type="button"
+                aria-label="Next hundred years"
+                onClick={() => {
+                  if (selectedCenturyIndex < availableCenturies.length - 1)
+                    setSelectedCentury(
+                      availableCenturies[selectedCenturyIndex + 1],
+                    );
+                }}
+                disabled={
+                  selectedCenturyIndex < 0 ||
+                  selectedCenturyIndex >= availableCenturies.length - 1
+                }
+                className="rounded-xl border border-subtle p-1 hover-nonaccent disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 sm:hidden">
+            <BarList items={selectedCenturyItems} compact />
+          </div>
+          <div className="mt-7 hidden sm:block">
+            <DecadeColumnChart items={selectedCenturyItems} />
           </div>
         </div>
       </section>

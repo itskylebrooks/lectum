@@ -87,7 +87,7 @@ export default function LibraryPage() {
 
   return (
     <div className="mt-4 space-y-4">
-      <section className="rounded-[1.75rem] border border-subtle bg-surface p-5">
+      <section className="rounded-2xl border border-subtle bg-surface p-5">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <DropdownSelect
             label="Sort"
@@ -136,7 +136,7 @@ export default function LibraryPage() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
             {filteredBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}
