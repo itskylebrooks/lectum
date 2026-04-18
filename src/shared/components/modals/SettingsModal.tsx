@@ -40,6 +40,8 @@ export default function SettingsModal({
   const [installHelpOpen, setInstallHelpOpen] = useState(false);
   const [installHelpSafariOpen, setInstallHelpSafariOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [statusTitle, setStatusTitle] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const enterRaf = useRef<number | null>(null);
@@ -53,6 +55,12 @@ export default function SettingsModal({
   const setMode = useThemeStore((state) => state.setMode);
   const isSystemTheme = mode === "system";
   const { isInstalled, canInstall, install } = usePWA();
+
+  function showStatus(title: string, message: string) {
+    setStatusTitle(title);
+    setStatusMessage(message);
+    setStatusOpen(true);
+  }
 
   function isMacSafari() {
     try {
@@ -145,12 +153,12 @@ export default function SettingsModal({
       }
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareUrl);
-        setStatusMessage("Link copied.");
+        showStatus("Share", "Link copied.");
         return;
       }
       window.prompt("Copy this link", shareUrl);
     } catch {
-      setStatusMessage("Share unavailable.");
+      showStatus("Share", "Share unavailable.");
     }
   }
 
@@ -175,9 +183,12 @@ export default function SettingsModal({
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setStatusMessage("Export complete.");
+      showStatus(
+        "Export complete",
+        "Your Lectum data was exported successfully.",
+      );
     } catch {
-      setStatusMessage("Export failed.");
+      showStatus("Export failed", "Export failed. Please try again.");
     } finally {
       setExporting(false);
     }
@@ -192,7 +203,8 @@ export default function SettingsModal({
     try {
       const parsed = parseImportPayload(text);
       if (!parsed.ok) {
-        setStatusMessage(
+        showStatus(
+          "Import failed",
           parsed.reason === "not_lectum"
             ? "That file is not a Lectum export."
             : "Import failed. Check the file and try again.",
@@ -203,7 +215,8 @@ export default function SettingsModal({
       await importBooks(parsed.payload.books);
       setMode(parsed.payload.settings.themeMode);
       setDateFormat(parsed.payload.settings.dateFormat);
-      setStatusMessage(
+      showStatus(
+        "Import complete",
         `Imported ${parsed.payload.books.length} ${parsed.payload.books.length === 1 ? "book" : "books"}.`,
       );
     } finally {
@@ -218,7 +231,7 @@ export default function SettingsModal({
 
   function handleManageSync() {
     if (!onManageSync) {
-      setStatusMessage("Sync is planned for a later Lectum release.");
+      showStatus("Sync", "Sync is planned for a later Lectum release.");
       return;
     }
 
@@ -237,12 +250,11 @@ export default function SettingsModal({
       localStorage.removeItem(STORAGE_KEYS.THEME_STORE);
       localStorage.removeItem(STORAGE_KEYS.THEME_MODE);
       localStorage.removeItem(STORAGE_KEYS.THEME_LAST_RESOLVED);
-      setStatusMessage(null);
       setConfirmClearOpen(false);
       beginClose();
     } catch (error) {
       console.error("Failed to erase Lectum data", error);
-      setStatusMessage("Erase failed.");
+      showStatus("Erase failed", "Failed to erase data. Please try again.");
       setConfirmClearOpen(false);
     }
   }
@@ -582,13 +594,6 @@ export default function SettingsModal({
               </button>
             </div>
           </div>
-
-          {statusMessage ? (
-            <>
-              <div className="border-t border-subtle" />
-              <div className="text-xs text-muted">{statusMessage}</div>
-            </>
-          ) : null}
         </div>
 
         <div className="-mx-6 mt-6 border-t border-subtle pt-4 px-6">
@@ -669,6 +674,15 @@ export default function SettingsModal({
         message="This will remove all Lectum books and local settings stored in this browser. This cannot be undone."
         confirmLabel="Erase"
         destructive
+      />
+      <ConfirmModal
+        open={statusOpen}
+        onClose={() => setStatusOpen(false)}
+        onConfirm={() => setStatusOpen(false)}
+        title={statusTitle || "Status"}
+        message={statusMessage ?? undefined}
+        confirmLabel="OK"
+        cancelLabel="Close"
       />
       <ConfirmModal
         open={installHelpSafariOpen}
