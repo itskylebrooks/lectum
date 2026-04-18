@@ -142,7 +142,7 @@ export default function LibraryPage() {
             </p>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
+          <div className="grid w-full grid-cols-2 justify-items-center gap-2 sm:mx-auto sm:max-w-[46rem] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
             {filteredBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}

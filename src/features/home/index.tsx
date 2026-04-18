@@ -32,7 +32,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
+          <div className="grid w-full grid-cols-2 justify-items-center gap-2 sm:mx-auto sm:max-w-[46rem] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
             {readingBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}
@@ -56,7 +56,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-[46rem] flex-wrap justify-center gap-3">
+          <div className="grid w-full grid-cols-2 justify-items-center gap-2 sm:mx-auto sm:max-w-[46rem] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
             {nextBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}
