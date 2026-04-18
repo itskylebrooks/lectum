@@ -1,13 +1,12 @@
 import type {
   BookCategory,
   BookFormat,
-  BookRating,
   BookWithThumbnail,
   FinishedBook,
   LibrarySort,
 } from '@/shared/types';
+import { RATING_ORDER } from '@/shared/utils/bookPresentation';
 
-const ratingOrder: BookRating[] = ['loved', 'liked', 'mixed', 'disliked', 'abandoned'];
 const formatOrder: BookFormat[] = ['print', 'digital', 'audiobook'];
 const categoryOrder: BookCategory[] = ['fiction', 'non-fiction'];
 
@@ -103,7 +102,7 @@ export function buildFinishedBookStats(books: BookWithThumbnail[]) {
       .sort((left, right) => left.label.localeCompare(right.label)),
     ratingDistribution: countByKey(
       finished.map((book) => book.rating),
-      ratingOrder,
+      RATING_ORDER,
     ),
     formatBreakdown: countByKey(
       finished.map((book) => book.format),

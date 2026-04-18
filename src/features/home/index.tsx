@@ -1,13 +1,19 @@
+import BookBadge from '@/shared/components/books/BookBadge';
 import BookCard from '@/shared/components/books/BookCard';
 import StatCard from '@/shared/components/layout/StatCard';
 import { useBookStore } from '@/shared/store/books';
 import { usePreferencesStore } from '@/shared/store/preferences';
+import {
+  formatBookCategoryLabel,
+  formatBookFormatLabel,
+} from '@/shared/utils/bookPresentation';
 import { formatDisplayDate } from '@/shared/utils/date';
 import {
   getBooksFinishedThisYear,
   getMostRecentFinishedBook,
   selectReadingBooks,
 } from '@/shared/utils/stats';
+import { BookOpen, CalendarDays } from 'lucide-react';
 
 export default function Home() {
   const books = useBookStore((state) => state.books);
@@ -21,15 +27,8 @@ export default function Home() {
 
   return (
     <div className="mt-4 space-y-4">
-      <section className="rounded-[2rem] border border-subtle bg-surface p-6 text-center">
-        <p className="text-xs uppercase tracking-[0.28em] text-soft">Right now</p>
-        <h1 className="mt-3 text-base font-medium text-muted sm:text-lg">
-          Keep the books you are actively reading visible and finish them without ceremony.
-        </h1>
-      </section>
-
       <section className="grid gap-4 sm:grid-cols-2">
-        <StatCard label="Finished this year" value={finishedThisYear} />
+        <StatCard label="Finished this year" value={finishedThisYear} icon={BookOpen} />
         <StatCard
           label="Last finished"
           value={recentFinished ? recentFinished.title : 'No finished books yet'}
@@ -38,44 +37,51 @@ export default function Home() {
               ? `${recentFinished.author} · ${formatDisplayDate(recentFinished.dateFinished, dateFormat)}`
               : 'No finished books yet.'
           }
+          icon={CalendarDays}
         />
       </section>
 
       <section className="space-y-4">
+        <div className="text-center uppercase tracking-wider text-sm md:text-base font-semibold text-muted">
+          CURRENTLY READING
+        </div>
+
         {readingBooks.length === 0 ? (
           <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
             <p className="text-lg font-medium text-strong">Nothing marked as reading yet.</p>
-            <p className="mt-2 text-sm text-muted">
-              Add the books you have open now, or pull one from your Library backlog when you start.
-            </p>
           </div>
         ) : (
           readingBooks.map((book) => (
             <BookCard
               key={book.id}
               book={book}
-              meta={
-                <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-soft">
-                  <span>{book.format}</span>
-                  <span>{book.category}</span>
-                  <span>{book.publicationYear}</span>
-                </div>
+              badges={
+                <>
+                  <BookBadge tone="neutral">{formatBookFormatLabel(book.format)}</BookBadge>
+                  <BookBadge tone="soft">{formatBookCategoryLabel(book.category)}</BookBadge>
+                  <BookBadge tone="soft">{book.publicationYear}</BookBadge>
+                </>
+              }
+              details={
+                <p className="text-sm text-muted">
+                  Active now. Finish it when you are done, or open manage actions to edit details.
+                </p>
               }
               actions={
                 <>
                   <button
                     type="button"
                     className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => openEdit(book.id)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl bg-accent px-3 py-2 text-sm text-inverse hover-accent-fade"
                     onClick={() => openFinish(book.id)}
                   >
                     Finish
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
+                    onClick={() => openEdit(book.id)}
+                  >
+                    Edit
                   </button>
                 </>
               }

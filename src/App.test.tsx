@@ -43,16 +43,20 @@ describe('App flow', () => {
     );
 
     await screen.findByText('Queued Book');
+    await user.click(screen.getByRole('button', { name: 'Manage' }));
     await user.click(screen.getByRole('button', { name: /start reading/i }));
     await user.click(screen.getAllByRole('link', { name: /home/i })[0]!);
 
-    await screen.findByRole('button', { name: /finish/i });
+    await screen.findByRole('button', { name: 'Manage' });
+    await user.click(screen.getByRole('button', { name: 'Manage' }));
     await user.click(screen.getByRole('button', { name: /finish/i }));
     await user.click(screen.getByRole('button', { name: /loved/i }));
     await user.click(screen.getByRole('button', { name: /save completion/i }));
 
     await user.click(screen.getAllByRole('link', { name: /library/i })[0]!);
     await screen.findByText('Queued Book');
-    expect(screen.getByText(/loved · print · fiction/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Loved').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Print').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Fiction').length).toBeGreaterThan(0);
   });
 });

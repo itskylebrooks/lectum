@@ -1,4 +1,11 @@
 import type { BookFinishValues, BookRating, BookWithThumbnail } from '@/shared/types';
+import BookBadge from '@/shared/components/books/BookBadge';
+import {
+  getBookRatingFromIndex,
+  getBookRatingIndex,
+  RATING_META,
+  RATING_ORDER,
+} from '@/shared/utils/bookPresentation';
 import { todayDateInputValue } from '@/shared/utils/date';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,18 +18,11 @@ interface FinishBookModalProps {
   onSave: (values: BookFinishValues) => Promise<void>;
 }
 
-const ratingOptions: { value: BookRating; label: string; description: string }[] = [
-  { value: 'loved', label: 'Loved', description: "Stayed with me; I'd reread or recommend it." },
-  { value: 'liked', label: 'Liked', description: 'Enjoyed it and I am glad I read it.' },
-  { value: 'mixed', label: 'Mixed', description: 'Some parts worked, some did not.' },
-  { value: 'disliked', label: 'Disliked', description: 'I struggled with it or lost interest.' },
-  { value: 'abandoned', label: 'Abandoned', description: 'I chose to stop and move on.' },
-];
-
 export default function FinishBookModal({ open, book, onClose, onSave }: FinishBookModalProps) {
   const [dateFinished, setDateFinished] = useState(todayDateInputValue());
   const [rating, setRating] = useState<BookRating>('liked');
   const [submitting, setSubmitting] = useState(false);
+  const selectedRating = RATING_META[rating];
 
   useEffect(() => {
     if (!open) return;
@@ -88,22 +88,47 @@ export default function FinishBookModal({ open, book, onClose, onSave }: FinishB
 
           <div className="space-y-3">
             <p className="text-sm font-medium text-strong">Rating</p>
-            <div className="grid gap-3">
-              {ratingOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setRating(option.value)}
-                  className={`rounded-[1.35rem] border px-4 py-4 text-left transition ${
-                    rating === option.value
-                      ? 'border-contrast bg-accent text-inverse'
-                      : 'border-subtle bg-surface hover-nonaccent'
-                  }`}
-                >
-                  <span className="block text-sm font-semibold">{option.label}</span>
-                  <span className="mt-1 block text-xs opacity-80">{option.description}</span>
-                </button>
-              ))}
+            <div className="rounded-[1.5rem] border border-subtle bg-surface p-4">
+              <div className="flex items-center justify-between gap-3">
+                <BookBadge tone={selectedRating.tone}>{selectedRating.label}</BookBadge>
+                <span className="text-xs uppercase tracking-[0.22em] text-soft">
+                  {getBookRatingIndex(rating) + 1}/{RATING_ORDER.length}
+                </span>
+              </div>
+
+              <div className="mt-4">
+                <input
+                  type="range"
+                  min={0}
+                  max={RATING_ORDER.length - 1}
+                  step={1}
+                  value={getBookRatingIndex(rating)}
+                  onChange={(event) =>
+                    setRating(getBookRatingFromIndex(Number(event.target.value)))
+                  }
+                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-progress-track"
+                  style={{ accentColor: 'var(--color-accent)' }}
+                  aria-label="Rating slider"
+                />
+                <div className="mt-3 grid grid-cols-5 gap-2 text-center">
+                  {RATING_ORDER.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`rounded-xl px-2 py-2 text-[11px] transition ${
+                        rating === value
+                          ? 'bg-accent text-inverse'
+                          : 'text-muted hover:bg-subtle hover:text-strong'
+                      }`}
+                      onClick={() => setRating(value)}
+                    >
+                      {RATING_META[value].shortLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-muted">{selectedRating.description}</p>
             </div>
           </div>
 
