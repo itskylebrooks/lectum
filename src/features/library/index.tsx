@@ -1,21 +1,13 @@
-import BookBadge from "@/shared/components/books/BookBadge";
-import BookCard from "@/shared/components/books/BookCard";
+import BookDetailsModal from "@/shared/components/books/BookDetailsModal";
+import BookThumbnailCard from "@/shared/components/books/BookThumbnailCard";
 import { useBookStore } from "@/shared/store/books";
 import { useLibraryUiStore } from "@/shared/store/libraryUi";
-import { usePreferencesStore } from "@/shared/store/preferences";
 import type {
   BookCategory,
   BookFormat,
   BookRating,
   LibrarySort,
 } from "@/shared/types";
-import {
-  formatBookCategoryLabel,
-  formatBookFormatLabel,
-  formatBookRatingLabel,
-  RATING_META,
-} from "@/shared/utils/bookPresentation";
-import { formatDisplayDate } from "@/shared/utils/date";
 import {
   selectFinishedBooks,
   selectNextBooks,
@@ -35,16 +27,17 @@ const sortOptions: { value: LibrarySort; label: string }[] = [
 export default function LibraryPage() {
   const books = useBookStore((state) => state.books);
   const openEdit = useBookStore((state) => state.openEdit);
+  const openFinish = useBookStore((state) => state.openFinish);
   const startBook = useBookStore((state) => state.startBook);
   const reopenBook = useBookStore((state) => state.reopenBook);
   const openDelete = useBookStore((state) => state.openDelete);
-  const dateFormat = usePreferencesStore((state) => state.dateFormat);
   const [ratingFilter, setRatingFilter] = useState<BookRating | "all">("all");
   const [formatFilter, setFormatFilter] = useState<BookFormat | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<BookCategory | "all">(
     "all",
   );
   const [sort, setSort] = useState<LibrarySort>("finishedDesc");
+  const [selectedBook, setSelectedBook] = useState<string | null>(null);
   const filtersOpen = useLibraryUiStore((state) => state.filtersOpen);
 
   const filteredBooks = useMemo(() => {
@@ -65,6 +58,8 @@ export default function LibraryPage() {
   const activeFilterCount = [ratingFilter, formatFilter, categoryFilter].filter(
     (value) => value !== "all",
   ).length;
+
+  const selectedBookData = books.find((b) => b.id === selectedBook) ?? null;
 
   function resetFilters() {
     setRatingFilter("all");
@@ -151,48 +146,15 @@ export default function LibraryPage() {
             </p>
           </div>
         ) : (
-          nextBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              badges={
-                <>
-                  <BookBadge tone="neutral">
-                    {formatBookFormatLabel(book.format)}
-                  </BookBadge>
-                  <BookBadge tone="soft">
-                    {formatBookCategoryLabel(book.category)}
-                  </BookBadge>
-                  <BookBadge tone="soft">{book.publicationYear}</BookBadge>
-                </>
-              }
-              actions={
-                <>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => void startBook(book.id)}
-                  >
-                    Start reading
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => openEdit(book.id)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse"
-                    onClick={() => openDelete(book.id)}
-                  >
-                    Delete
-                  </button>
-                </>
-              }
-            />
-          ))
+          <div className="flex flex-wrap justify-center gap-4">
+            {nextBooks.map((book) => (
+              <BookThumbnailCard
+                key={book.id}
+                book={book}
+                onClick={() => setSelectedBook(book.id)}
+              />
+            ))}
+          </div>
         )}
       </section>
 
@@ -211,60 +173,28 @@ export default function LibraryPage() {
             </p>
           </div>
         ) : (
-          filteredBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              badges={
-                <>
-                  <BookBadge tone={RATING_META[book.rating].tone}>
-                    {formatBookRatingLabel(book.rating)}
-                  </BookBadge>
-                  <BookBadge tone="neutral">
-                    {formatBookFormatLabel(book.format)}
-                  </BookBadge>
-                  <BookBadge tone="soft">
-                    {formatBookCategoryLabel(book.category)}
-                  </BookBadge>
-                </>
-              }
-              actions={
-                <>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => openEdit(book.id)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => void reopenBook(book.id)}
-                  >
-                    Reopen
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-danger hover:bg-danger hover:text-inverse"
-                    onClick={() => openDelete(book.id)}
-                  >
-                    Delete
-                  </button>
-                </>
-              }
-              footer={
-                <div className="space-y-1 text-sm text-muted">
-                  <p>
-                    Finished {formatDisplayDate(book.dateFinished, dateFormat)}
-                  </p>
-                  <p>Published {book.publicationYear}</p>
-                </div>
-              }
-            />
-          ))
+          <div className="flex flex-wrap justify-center gap-4">
+            {filteredBooks.map((book) => (
+              <BookThumbnailCard
+                key={book.id}
+                book={book}
+                onClick={() => setSelectedBook(book.id)}
+              />
+            ))}
+          </div>
         )}
       </section>
+
+      <BookDetailsModal
+        open={selectedBook !== null}
+        book={selectedBookData}
+        onClose={() => setSelectedBook(null)}
+        onEdit={openEdit}
+        onFinish={openFinish}
+        onReopen={reopenBook}
+        onDelete={openDelete}
+        onStartReading={startBook}
+      />
     </div>
   );
 }

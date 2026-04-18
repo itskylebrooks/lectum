@@ -84,35 +84,25 @@ export default function StatsPage() {
         />
       </section>
 
-      <section className="rounded-[1.75rem] border border-subtle bg-surface p-5">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-strong">Reading pace</h2>
-            <p className="mt-1 text-sm text-muted">
-              Monthly and yearly output without extra breakdown cards.
-            </p>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
+          <h2 className="text-lg font-semibold text-strong">Books per month</h2>
+          <div className="mt-4">
+            <BarList
+              items={stats.perMonth}
+              formatLabel={formatMonthLabel}
+              compact
+            />
           </div>
         </div>
-        <div className="mt-4 grid gap-5 lg:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-medium text-strong">Books per month</h3>
-            <div className="mt-3">
-              <BarList
-                items={stats.perMonth}
-                formatLabel={formatMonthLabel}
-                compact
-              />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-strong">Books per year</h3>
-            <div className="mt-3">
-              <BarList
-                items={stats.perYear}
-                formatLabel={formatYearLabel}
-                compact
-              />
-            </div>
+        <div className="rounded-[1.75rem] border border-subtle bg-surface p-5">
+          <h2 className="text-lg font-semibold text-strong">Books per year</h2>
+          <div className="mt-4">
+            <BarList
+              items={stats.perYear}
+              formatLabel={formatYearLabel}
+              compact
+            />
           </div>
         </div>
       </section>

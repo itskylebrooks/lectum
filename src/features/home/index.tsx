@@ -1,26 +1,29 @@
-import BookBadge from "@/shared/components/books/BookBadge";
-import BookCard from "@/shared/components/books/BookCard";
+import BookDetailsModal from "@/shared/components/books/BookDetailsModal";
+import BookThumbnailCard from "@/shared/components/books/BookThumbnailCard";
 import StatCard from "@/shared/components/layout/StatCard";
 import { useBookStore } from "@/shared/store/books";
-import {
-  formatBookCategoryLabel,
-  formatBookFormatLabel,
-} from "@/shared/utils/bookPresentation";
 import {
   getBooksFinishedThisYear,
   getMostRecentFinishedBook,
   selectReadingBooks,
 } from "@/shared/utils/stats";
 import { BookOpen, CalendarDays } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
   const books = useBookStore((state) => state.books);
   const openEdit = useBookStore((state) => state.openEdit);
   const openFinish = useBookStore((state) => state.openFinish);
+  const startBook = useBookStore((state) => state.startBook);
+  const reopenBook = useBookStore((state) => state.reopenBook);
+  const openDelete = useBookStore((state) => state.openDelete);
+
+  const [selectedBook, setSelectedBook] = useState<string | null>(null);
 
   const readingBooks = selectReadingBooks(books);
   const finishedThisYear = getBooksFinishedThisYear(books);
   const recentFinished = getMostRecentFinishedBook(books);
+  const selectedBookData = books.find((b) => b.id === selectedBook) ?? null;
 
   return (
     <div className="mt-4 space-y-4">
@@ -51,44 +54,28 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          readingBooks.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              badges={
-                <>
-                  <BookBadge tone="neutral">
-                    {formatBookFormatLabel(book.format)}
-                  </BookBadge>
-                  <BookBadge tone="soft">
-                    {formatBookCategoryLabel(book.category)}
-                  </BookBadge>
-                  <BookBadge tone="soft">{book.publicationYear}</BookBadge>
-                </>
-              }
-              actions={
-                <>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => openFinish(book.id)}
-                  >
-                    Finish
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
-                    onClick={() => openEdit(book.id)}
-                  >
-                    Edit
-                  </button>
-                </>
-              }
-              footer={<p className="text-sm text-muted">Currently reading</p>}
-            />
-          ))
+          <div className="flex flex-wrap justify-center gap-4">
+            {readingBooks.map((book) => (
+              <BookThumbnailCard
+                key={book.id}
+                book={book}
+                onClick={() => setSelectedBook(book.id)}
+              />
+            ))}
+          </div>
         )}
       </section>
+
+      <BookDetailsModal
+        open={selectedBook !== null}
+        book={selectedBookData}
+        onClose={() => setSelectedBook(null)}
+        onEdit={openEdit}
+        onFinish={openFinish}
+        onReopen={reopenBook}
+        onDelete={openDelete}
+        onStartReading={startBook}
+      />
     </div>
   );
 }

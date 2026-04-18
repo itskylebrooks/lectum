@@ -42,7 +42,7 @@ export default function BookCard({
   }, [actionsOpen]);
 
   return (
-    <article className="mx-auto w-full max-w-md rounded-[1.75rem] border border-subtle bg-surface p-5 shadow-sm transition-shadow duration-200 hover:shadow-elevated">
+    <article className="mx-auto w-full max-w-sm rounded-[1.75rem] border border-subtle bg-surface p-5 shadow-sm transition-shadow duration-200 hover:shadow-elevated">
       <div className="flex flex-col items-center text-center">
         <BookCover
           title={book.title}

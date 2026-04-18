@@ -1,32 +1,33 @@
-import ImageCropModal from '@/shared/components/books/ImageCropModal';
+import ImageCropModal from "@/shared/components/books/ImageCropModal";
 import type {
   BookCategory,
   BookEditorValues,
   BookFormat,
   BookFormStatus,
   BookWithThumbnail,
-} from '@/shared/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { ChevronDown, Upload, X } from 'lucide-react';
+} from "@/shared/types";
+import { ChevronDown, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface BookEditorModalProps {
   open: boolean;
-  mode: 'create' | 'edit';
+  mode: "create" | "edit";
   book: BookWithThumbnail | null;
   initialStatus: BookFormStatus;
   onClose: () => void;
   onSave: (values: BookEditorValues) => Promise<void>;
 }
 
-const formats: BookFormat[] = ['print', 'digital', 'audiobook'];
-const categories: BookCategory[] = ['fiction', 'non-fiction'];
+const formats: BookFormat[] = ["print", "digital", "audiobook"];
+const categories: BookCategory[] = ["fiction", "non-fiction"];
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read image'));
+    reader.onerror = () =>
+      reject(reader.error ?? new Error("Failed to read image"));
     reader.readAsDataURL(file);
   });
 }
@@ -42,15 +43,17 @@ export default function BookEditorModal({
   const [visible, setVisible] = useState(open);
   const [closing, setClosing] = useState(false);
   const [entering, setEntering] = useState(false);
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [publicationYear, setPublicationYear] = useState(String(new Date().getFullYear()));
-  const [format, setFormat] = useState<BookFormat>('print');
-  const [category, setCategory] = useState<BookCategory>('fiction');
-  const [status, setStatus] = useState<BookFormStatus>('next');
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [publicationYear, setPublicationYear] = useState(
+    String(new Date().getFullYear()),
+  );
+  const [format, setFormat] = useState<BookFormat>("print");
+  const [category, setCategory] = useState<BookCategory>("fiction");
+  const [status, setStatus] = useState<BookFormStatus>("next");
   const [thumbnailDataUrl, setThumbnailDataUrl] = useState<string | null>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
-  const [cropMimeType, setCropMimeType] = useState('image/jpeg');
+  const [cropMimeType, setCropMimeType] = useState("image/jpeg");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -67,15 +70,17 @@ export default function BookEditorModal({
       setVisible(true);
       setClosing(false);
       setEntering(true);
-      setTitle(book?.title ?? '');
-      setAuthor(book?.author ?? '');
-      setPublicationYear(String(book?.publicationYear ?? new Date().getFullYear()));
-      setFormat(book?.format ?? 'print');
-      setCategory(book?.category ?? 'fiction');
-      setStatus(book?.isReading ? 'reading' : initialStatus);
+      setTitle(book?.title ?? "");
+      setAuthor(book?.author ?? "");
+      setPublicationYear(
+        String(book?.publicationYear ?? new Date().getFullYear()),
+      );
+      setFormat(book?.format ?? "print");
+      setCategory(book?.category ?? "fiction");
+      setStatus(book?.isReading ? "reading" : initialStatus);
       setThumbnailDataUrl(book?.thumbnailDataUrl ?? null);
       setCropSource(null);
-      setCropMimeType('image/jpeg');
+      setCropMimeType("image/jpeg");
       setSubmitting(false);
       setError(null);
       enterRaf.current = requestAnimationFrame(() => {
@@ -104,22 +109,24 @@ export default function BookEditorModal({
   useEffect(() => {
     if (!visible) return;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
   }, [visible]);
 
-  const titleText = mode === 'create' ? 'Add Book' : 'Edit Book';
+  const titleText = mode === "create" ? "Add Book" : "Edit Book";
   const isFinishedBook = Boolean(book?.dateFinished);
 
-  async function handleThumbnailChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleThumbnailChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0];
     if (!file) return;
     const result = await fileToDataUrl(file);
     setCropSource(result);
-    setCropMimeType(file.type || 'image/jpeg');
-    event.target.value = '';
+    setCropMimeType(file.type || "image/jpeg");
+    event.target.value = "";
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -128,11 +135,15 @@ export default function BookEditorModal({
 
     const year = Number(publicationYear);
     if (!title.trim() || !author.trim()) {
-      setError('Title and author are required.');
+      setError("Title and author are required.");
       return;
     }
-    if (!Number.isInteger(year) || year < 0 || year > new Date().getFullYear() + 2) {
-      setError('Enter a valid publication year.');
+    if (
+      !Number.isInteger(year) ||
+      year < 0 ||
+      year > new Date().getFullYear() + 2
+    ) {
+      setError("Enter a valid publication year.");
       return;
     }
 
@@ -144,7 +155,7 @@ export default function BookEditorModal({
         publicationYear: year,
         format,
         category,
-        isReading: status === 'reading',
+        isReading: status === "reading",
         thumbnailDataUrl,
       });
       onClose();
@@ -166,10 +177,10 @@ export default function BookEditorModal({
   useEffect(() => {
     if (!visible) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'Esc') beginClose();
+      if (event.key === "Escape" || event.key === "Esc") beginClose();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [beginClose, visible]);
 
   if (!visible) return null;
@@ -177,23 +188,25 @@ export default function BookEditorModal({
   return createPortal(
     <>
       <div
-        className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? 'bg-transparent' : 'bg-overlay/90 backdrop-blur-sm'}`}
+        className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? "bg-transparent" : "bg-overlay/90 backdrop-blur-sm"}`}
         onClick={beginClose}
       >
         <div
-          className={`max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[1.75rem] border border-subtle bg-surface-elevated p-4 shadow-elevated transition-all duration-200 sm:p-5 ${closing || entering ? 'opacity-0 scale-[0.95] translate-y-1' : 'opacity-100 scale-100 translate-y-0'}`}
+          className={`max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[1.75rem] border border-subtle bg-surface-elevated p-4 shadow-elevated transition-all duration-200 sm:p-5 ${closing || entering ? "opacity-0 scale-[0.95] translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
           onClick={(event) => event.stopPropagation()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="book-editor-title"
         >
           <div className="flex items-start justify-between gap-3 border-b border-subtle pb-3">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.24em] text-soft">Lectum</p>
-            <h2 id="book-editor-title" className="mt-2 text-xl font-semibold text-strong">
-              {titleText}
-            </h2>
-          </div>
+            <div className="min-w-0">
+              <h2
+                id="book-editor-title"
+                className="text-xl font-semibold text-strong"
+              >
+                {titleText}
+              </h2>
+            </div>
             <button
               type="button"
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-subtle text-muted hover-nonaccent"
@@ -242,7 +255,9 @@ export default function BookEditorModal({
                 <div className="relative">
                   <select
                     value={format}
-                    onChange={(event) => setFormat(event.target.value as BookFormat)}
+                    onChange={(event) =>
+                      setFormat(event.target.value as BookFormat)
+                    }
                     className="appearance-none w-full rounded-xl border border-subtle bg-transparent px-3 py-2.5 pr-9 text-sm text-strong outline-none ring-0 focus:border-accent"
                   >
                     {formats.map((value) => (
@@ -265,8 +280,8 @@ export default function BookEditorModal({
                       onClick={() => setCategory(value)}
                       className={`rounded-xl border border-subtle px-3 py-2 text-sm transition-all duration-150 ease-in-out ${
                         category === value
-                          ? 'bg-accent text-inverse shadow-elevated hover-accent-fade'
-                          : 'bg-surface-elevated text-muted hover-nonaccent'
+                          ? "bg-accent text-inverse shadow-elevated hover-accent-fade"
+                          : "bg-surface-elevated text-muted hover-nonaccent"
                       }`}
                     >
                       {value}
@@ -291,7 +306,7 @@ export default function BookEditorModal({
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="h-4 w-4" />
-                    {thumbnailDataUrl ? 'Replace' : 'Choose'}
+                    {thumbnailDataUrl ? "Replace" : "Choose"}
                   </button>
                   {thumbnailDataUrl ? (
                     <button
@@ -299,7 +314,7 @@ export default function BookEditorModal({
                       className="rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent"
                       onClick={() => {
                         setCropSource(thumbnailDataUrl);
-                        setCropMimeType('image/jpeg');
+                        setCropMimeType("image/jpeg");
                       }}
                     >
                       Preview
@@ -324,22 +339,22 @@ export default function BookEditorModal({
                 <div className="grid w-full grid-cols-2 gap-2 sm:max-w-[calc(50%-0.375rem)]">
                   <button
                     type="button"
-                    onClick={() => setStatus('next')}
+                    onClick={() => setStatus("next")}
                     className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                      status === 'next'
-                        ? 'border-subtle bg-accent text-inverse shadow-elevated'
-                        : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
+                      status === "next"
+                        ? "border-subtle bg-accent text-inverse shadow-elevated"
+                        : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
                     }`}
                   >
                     <span className="block text-sm font-semibold">Next</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStatus('reading')}
+                    onClick={() => setStatus("reading")}
                     className={`rounded-xl border px-2.5 py-2 text-left transition ${
-                      status === 'reading'
-                        ? 'border-subtle bg-accent text-inverse shadow-elevated'
-                        : 'border-subtle bg-surface-elevated text-muted hover-nonaccent'
+                      status === "reading"
+                        ? "border-subtle bg-accent text-inverse shadow-elevated"
+                        : "border-subtle bg-surface-elevated text-muted hover-nonaccent"
                     }`}
                   >
                     <span className="block text-sm font-semibold">Reading</span>
@@ -363,7 +378,11 @@ export default function BookEditorModal({
                 disabled={submitting}
                 className="rounded-xl bg-accent px-3 py-2 text-sm font-medium text-inverse hover-accent-fade disabled:opacity-60"
               >
-                {submitting ? 'Saving…' : mode === 'create' ? 'Add book' : 'Save changes'}
+                {submitting
+                  ? "Saving…"
+                  : mode === "create"
+                    ? "Add book"
+                    : "Save changes"}
               </button>
             </div>
           </form>
