@@ -38,12 +38,12 @@ describe("App flow", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/library"]}>
+      <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
     );
 
-    // Book should appear in library with accessible label
+    // Book should appear on home with accessible label
     await screen.findByLabelText(/Open Queued Book/i);
     expect(screen.getByLabelText(/Open Queued Book/i)).toBeInTheDocument();
   });

@@ -1,15 +1,12 @@
 import LibraryPage from "@/features/library";
 import { useBookStore } from "@/shared/store/books";
-import { useLibraryUiStore } from "@/shared/store/libraryUi";
 import { usePreferencesStore } from "@/shared/store/preferences";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("LibraryPage", () => {
   beforeEach(() => {
     usePreferencesStore.setState({ dateFormat: "DMY" });
-    useLibraryUiStore.setState({ filtersOpen: false });
     useBookStore.setState({
       books: [
         {
@@ -51,18 +48,8 @@ describe("LibraryPage", () => {
   });
 
   it("renders library page with books and filters", async () => {
-    const user = userEvent.setup();
+    render(<LibraryPage />);
 
-    const { rerender } = render(<LibraryPage />);
-
-    // Filters should be hidden initially
-    expect(screen.queryByDisplayValue("All ratings")).not.toBeInTheDocument();
-
-    // Show filters
-    useLibraryUiStore.setState({ filtersOpen: true });
-    rerender(<LibraryPage />);
-
-    // Filters should now be visible
     expect(screen.getByDisplayValue("All ratings")).toBeInTheDocument();
 
     // Book should be visible and clickable

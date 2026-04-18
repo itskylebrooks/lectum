@@ -1,13 +1,7 @@
 import BookDetailsModal from "@/shared/components/books/BookDetailsModal";
 import BookThumbnailCard from "@/shared/components/books/BookThumbnailCard";
-import StatCard from "@/shared/components/layout/StatCard";
 import { useBookStore } from "@/shared/store/books";
-import {
-  getBooksFinishedThisYear,
-  getMostRecentFinishedBook,
-  selectReadingBooks,
-} from "@/shared/utils/stats";
-import { BookOpen, CalendarDays } from "lucide-react";
+import { selectNextBooks, selectReadingBooks } from "@/shared/utils/stats";
 import { useState } from "react";
 
 export default function Home() {
@@ -21,30 +15,14 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
 
   const readingBooks = selectReadingBooks(books);
-  const finishedThisYear = getBooksFinishedThisYear(books);
-  const recentFinished = getMostRecentFinishedBook(books);
+  const nextBooks = selectNextBooks(books);
   const selectedBookData = books.find((b) => b.id === selectedBook) ?? null;
 
   return (
     <div className="mt-4 space-y-4">
-      <section className="grid gap-4 sm:grid-cols-2">
-        <StatCard
-          label="Finished this year"
-          value={finishedThisYear}
-          icon={BookOpen}
-        />
-        <StatCard
-          label="Last finished"
-          value={
-            recentFinished ? recentFinished.title : "No finished books yet"
-          }
-          icon={CalendarDays}
-        />
-      </section>
-
       <section className="space-y-4">
         <div className="text-center uppercase tracking-wider text-sm md:text-base font-semibold text-muted">
-          CURRENTLY READING
+          READING
         </div>
 
         {readingBooks.length === 0 ? (
@@ -56,6 +34,30 @@ export default function Home() {
         ) : (
           <div className="flex flex-wrap justify-center gap-4">
             {readingBooks.map((book) => (
+              <BookThumbnailCard
+                key={book.id}
+                book={book}
+                onClick={() => setSelectedBook(book.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <div className="text-center uppercase tracking-wider text-sm md:text-base font-semibold text-muted">
+          NEXT
+        </div>
+
+        {nextBooks.length === 0 ? (
+          <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
+            <p className="text-lg font-medium text-strong">
+              Nothing waiting in your next list.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-4">
+            {nextBooks.map((book) => (
               <BookThumbnailCard
                 key={book.id}
                 book={book}
