@@ -266,7 +266,7 @@ export default function BookEditorModal({
         onClick={beginClose}
       >
         <div
-          className={`max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-subtle bg-surface-elevated p-5 shadow-elevated ring-1 ring-black/5 dark:ring-neutral-700/5 transition-all duration-200 sm:p-6 ${closing || entering ? "opacity-0 scale-[0.95] -translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
+          className={`max-h-[92vh] w-full max-w-[28rem] overflow-y-auto rounded-2xl border border-subtle bg-surface-elevated p-5 shadow-elevated ring-1 ring-black/5 dark:ring-neutral-700/5 transition-all duration-200 sm:p-6 ${closing || entering ? "opacity-0 scale-[0.95] -translate-y-1" : "opacity-100 scale-100 translate-y-0"}`}
           onClick={(event) => event.stopPropagation()}
           role="dialog"
           aria-modal="true"
