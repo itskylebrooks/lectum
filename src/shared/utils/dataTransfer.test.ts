@@ -18,21 +18,33 @@ const sampleBooks: BookWithThumbnail[] = [
     createdAt: '2026-04-01T10:00:00.000Z',
     updatedAt: '2026-04-11T10:00:00.000Z',
   },
+  {
+    id: '2',
+    title: 'Piranesi',
+    author: 'Susanna Clarke',
+    publicationYear: 2020,
+    format: 'digital',
+    category: 'fiction',
+    isReading: true,
+    createdAt: '2026-04-08T10:00:00.000Z',
+    updatedAt: '2026-04-13T10:00:00.000Z',
+    thumbnailDataUrl: null,
+  },
 ];
 
 describe('data transfer', () => {
-  it('round-trips Lectum exports with thumbnails', () => {
+  it('round-trips full library data and settings', () => {
     const payload = buildExportPayload({
       books: sampleBooks,
-      settings: { themeMode: 'system', dateFormat: 'DMY' },
+      settings: { themeMode: 'dark', dateFormat: 'MDY' },
     });
 
     const parsed = parseImportPayload(JSON.stringify(payload));
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
-    expect(parsed.payload.books[0]?.thumbnailDataUrl).toBe(sampleBooks[0]?.thumbnailDataUrl);
-    expect(parsed.payload.settings.dateFormat).toBe('DMY');
+    expect(parsed.payload.settings).toEqual({ themeMode: 'dark', dateFormat: 'MDY' });
+    expect(parsed.payload.books).toEqual(sampleBooks);
   });
 
   it('rejects non-Lectum payloads', () => {
