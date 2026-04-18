@@ -97,9 +97,9 @@ export default function ConfirmModal({
         >
           {title}
         </h2>
-        {message && (
-          <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">{message}</p>
-        )}
+        {message ? (
+          <div className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">{message}</div>
+        ) : null}
 
         <div className="mt-5 flex items-center justify-end gap-2">
           <button

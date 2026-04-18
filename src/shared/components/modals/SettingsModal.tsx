@@ -29,6 +29,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [entering, setEntering] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [installHelpOpen, setInstallHelpOpen] = useState(false);
+  const [installHelpSafariOpen, setInstallHelpSafariOpen] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -43,6 +45,17 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const setMode = useThemeStore((state) => state.setMode);
   const isSystemTheme = mode === 'system';
   const { isInstalled, canInstall, install } = usePWA();
+
+  function isMacSafari() {
+    try {
+      const ua = navigator.userAgent || '';
+      const isMac = /Macintosh|Mac OS X/.test(navigator.platform) || /Macintosh/.test(ua);
+      const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox/.test(ua);
+      return isMac && isSafari;
+    } catch {
+      return false;
+    }
+  }
 
   useEffect(() => {
     if (open) {
@@ -389,8 +402,10 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
                   if (isInstalled) return;
                   if (canInstall) {
                     void install();
+                  } else if (isMacSafari()) {
+                    setInstallHelpSafariOpen(true);
                   } else {
-                    setStatusMessage('Install prompt is unavailable on this device right now.');
+                    setInstallHelpOpen(true);
                   }
                 }}
                 disabled={isInstalled}
@@ -627,6 +642,38 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         message="This will remove all Lectum books and local settings stored in this browser. This cannot be undone."
         confirmLabel="Erase"
         destructive
+      />
+      <ConfirmModal
+        open={installHelpSafariOpen}
+        onClose={() => setInstallHelpSafariOpen(false)}
+        onConfirm={() => setInstallHelpSafariOpen(false)}
+        title="Install Lectum — Safari"
+        message={
+          <div className="text-sm text-strong">
+            <p>
+              To add Lectum to your Dock: click the <strong>Share</strong> button in Safari and
+              choose <strong>Add to Dock</strong>.
+            </p>
+          </div>
+        }
+        confirmLabel="OK"
+        cancelLabel="Close"
+      />
+      <ConfirmModal
+        open={installHelpOpen}
+        onClose={() => setInstallHelpOpen(false)}
+        onConfirm={() => setInstallHelpOpen(false)}
+        title="Install Lectum"
+        message={
+          <div className="text-sm text-strong">
+            <p>
+              Install is not available here. Try switching to a supported browser such as Chrome,
+              Edge, or Safari, or exit incognito/private mode.
+            </p>
+          </div>
+        }
+        confirmLabel="OK"
+        cancelLabel="Close"
       />
       <div className="flex-[6] pointer-events-none" />
     </div>,
