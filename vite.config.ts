@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import pkg from "./package.json";
 
 export default defineConfig(({ command }) => {
   const isDev = command === "serve";
@@ -52,6 +53,9 @@ export default defineConfig(({ command }) => {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
+    },
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
     },
     test: {
       environment: "jsdom",

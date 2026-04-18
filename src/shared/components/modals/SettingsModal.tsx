@@ -25,7 +25,7 @@ interface SettingsModalProps {
   onManageSync?: () => void;
 }
 
-const APP_VERSION = "0.5.0";
+const APP_VERSION = __APP_VERSION__;
 
 export default function SettingsModal({
   open,
