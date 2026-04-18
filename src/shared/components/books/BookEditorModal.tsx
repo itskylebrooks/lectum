@@ -28,7 +28,7 @@ interface BookEditorModalProps {
 const formats: BookFormat[] = ["print", "digital", "audiobook"];
 const categories: BookCategory[] = ["fiction", "non-fiction"];
 
-type LayerPhase = "enter" | "exit";
+type LayerPhase = "enter" | "exit" | "idle";
 type LayerDir = "forward" | "back";
 interface StepLayer {
   key: number;
@@ -65,7 +65,7 @@ export default function BookEditorModal({
   const [entering, setEntering] = useState(false);
   const [step, setStep] = useState(1);
   const [renderedSteps, setRenderedSteps] = useState<StepLayer[]>([
-    { key: 0, idx: 1, phase: "enter", dir: "forward" },
+    { key: 0, idx: 1, phase: "idle", dir: "forward" },
   ]);
   const [height, setHeight] = useState<number | "auto">("auto");
   const [title, setTitle] = useState("");
@@ -111,7 +111,7 @@ export default function BookEditorModal({
       setStep(1);
       stepKeyRef.current++;
       setRenderedSteps([
-        { key: stepKeyRef.current, idx: 1, phase: "enter", dir: "forward" },
+        { key: stepKeyRef.current, idx: 1, phase: "idle", dir: "forward" },
       ]);
       setTitle(book?.title ?? "");
       setAuthor(book?.author ?? "");
@@ -299,14 +299,18 @@ export default function BookEditorModal({
               }}
             >
               {renderedSteps.map((layer) => {
-                const stateClass =
-                  layer.phase === "enter"
-                    ? layer.dir === "forward"
+                let stateClass = "";
+                if (layer.phase === "enter") {
+                  stateClass =
+                    layer.dir === "forward"
                       ? "guide-step-enter-forward"
-                      : "guide-step-enter-back"
-                    : layer.dir === "forward"
+                      : "guide-step-enter-back";
+                } else if (layer.phase === "exit") {
+                  stateClass =
+                    layer.dir === "forward"
                       ? "guide-step-exit-forward"
                       : "guide-step-exit-back";
+                }
                 const isCurrent = layer.idx === step;
                 return (
                   <div
