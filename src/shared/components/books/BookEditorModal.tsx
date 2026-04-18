@@ -262,7 +262,7 @@ export default function BookEditorModal({
   return createPortal(
     <>
       <div
-        className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? "bg-transparent" : "bg-overlay/90 backdrop-blur-sm"}`}
+        className={`fixed inset-0 z-[90] flex items-center justify-center p-4 transition-colors duration-200 ${closing || entering ? "bg-transparent" : "bg-overlay backdrop-blur-sm"}`}
         onClick={beginClose}
       >
         <div
