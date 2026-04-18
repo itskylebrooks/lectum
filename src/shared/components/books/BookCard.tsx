@@ -1,7 +1,7 @@
-import BookCover from '@/shared/components/books/BookCover';
-import type { BookWithThumbnail } from '@/shared/types';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Settings2 } from 'lucide-react';
+import BookCover from "@/shared/components/books/BookCover";
+import type { BookWithThumbnail } from "@/shared/types";
+import { Settings2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 interface BookCardProps {
   book: BookWithThumbnail;
@@ -20,7 +20,7 @@ export default function BookCard({
   primaryAction,
   actions,
   footer,
-  manageLabel = 'Manage',
+  manageLabel = "Manage",
 }: BookCardProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsRef = useRef<HTMLDivElement | null>(null);
@@ -29,17 +29,20 @@ export default function BookCard({
     if (!actionsOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
+      if (
+        actionsRef.current &&
+        !actionsRef.current.contains(event.target as Node)
+      ) {
         setActionsOpen(false);
       }
     };
 
-    window.addEventListener('pointerdown', handlePointerDown);
-    return () => window.removeEventListener('pointerdown', handlePointerDown);
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
   }, [actionsOpen]);
 
   return (
-    <article className="rounded-[1.75rem] border border-subtle bg-surface p-5 shadow-sm transition-shadow duration-200 hover:shadow-elevated">
+    <article className="mx-auto w-full max-w-md rounded-[1.75rem] border border-subtle bg-surface p-5 shadow-sm transition-shadow duration-200 hover:shadow-elevated">
       <div className="flex flex-col items-center text-center">
         <BookCover
           title={book.title}
@@ -52,16 +55,29 @@ export default function BookCard({
           <p className="mt-1 text-sm text-muted">{book.author}</p>
         </div>
 
-        {badges ? <div className="mt-3 flex flex-wrap justify-center gap-2">{badges}</div> : null}
+        {badges ? (
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {badges}
+          </div>
+        ) : null}
         {details ? <div className="mt-4 w-full">{details}</div> : null}
-        {footer ? <div className="mt-4 w-full border-t border-subtle pt-3">{footer}</div> : null}
+        {footer ? (
+          <div className="mt-4 w-full border-t border-subtle pt-3">
+            {footer}
+          </div>
+        ) : null}
 
-        {(primaryAction || actions) ? (
-          <div ref={actionsRef} className="mt-4 flex w-full flex-col items-center gap-2">
+        {primaryAction || actions ? (
+          <div
+            ref={actionsRef}
+            className="mt-4 flex w-full flex-col items-center gap-2"
+          >
             {primaryAction}
             {actions ? (
               actionsOpen ? (
-                <div className="flex w-full flex-wrap items-center justify-center gap-2">{actions}</div>
+                <div className="flex w-full flex-wrap items-center justify-center gap-2">
+                  {actions}
+                </div>
               ) : (
                 <button
                   type="button"

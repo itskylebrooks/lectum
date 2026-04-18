@@ -1,26 +1,35 @@
-import BookBadge from '@/shared/components/books/BookBadge';
-import BookCard from '@/shared/components/books/BookCard';
-import { useBookStore } from '@/shared/store/books';
-import { useLibraryUiStore } from '@/shared/store/libraryUi';
-import { usePreferencesStore } from '@/shared/store/preferences';
-import type { BookCategory, BookFormat, BookRating, LibrarySort } from '@/shared/types';
+import BookBadge from "@/shared/components/books/BookBadge";
+import BookCard from "@/shared/components/books/BookCard";
+import { useBookStore } from "@/shared/store/books";
+import { useLibraryUiStore } from "@/shared/store/libraryUi";
+import { usePreferencesStore } from "@/shared/store/preferences";
+import type {
+  BookCategory,
+  BookFormat,
+  BookRating,
+  LibrarySort,
+} from "@/shared/types";
 import {
   formatBookCategoryLabel,
   formatBookFormatLabel,
   formatBookRatingLabel,
   RATING_META,
-} from '@/shared/utils/bookPresentation';
-import { formatDisplayDate } from '@/shared/utils/date';
-import { selectFinishedBooks, selectNextBooks, sortFinishedBooks } from '@/shared/utils/stats';
-import { useMemo, useState } from 'react';
+} from "@/shared/utils/bookPresentation";
+import { formatDisplayDate } from "@/shared/utils/date";
+import {
+  selectFinishedBooks,
+  selectNextBooks,
+  sortFinishedBooks,
+} from "@/shared/utils/stats";
+import { useMemo, useState } from "react";
 
 const sortOptions: { value: LibrarySort; label: string }[] = [
-  { value: 'finishedDesc', label: 'Finished date ↓' },
-  { value: 'finishedAsc', label: 'Finished date ↑' },
-  { value: 'title', label: 'Title' },
-  { value: 'author', label: 'Author' },
-  { value: 'publicationYearDesc', label: 'Publication year ↓' },
-  { value: 'publicationYearAsc', label: 'Publication year ↑' },
+  { value: "finishedDesc", label: "Finished date ↓" },
+  { value: "finishedAsc", label: "Finished date ↑" },
+  { value: "title", label: "Title" },
+  { value: "author", label: "Author" },
+  { value: "publicationYearDesc", label: "Publication year ↓" },
+  { value: "publicationYearAsc", label: "Publication year ↑" },
 ];
 
 export default function LibraryPage() {
@@ -30,31 +39,38 @@ export default function LibraryPage() {
   const reopenBook = useBookStore((state) => state.reopenBook);
   const openDelete = useBookStore((state) => state.openDelete);
   const dateFormat = usePreferencesStore((state) => state.dateFormat);
-  const [ratingFilter, setRatingFilter] = useState<BookRating | 'all'>('all');
-  const [formatFilter, setFormatFilter] = useState<BookFormat | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<BookCategory | 'all'>('all');
-  const [sort, setSort] = useState<LibrarySort>('finishedDesc');
+  const [ratingFilter, setRatingFilter] = useState<BookRating | "all">("all");
+  const [formatFilter, setFormatFilter] = useState<BookFormat | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<BookCategory | "all">(
+    "all",
+  );
+  const [sort, setSort] = useState<LibrarySort>("finishedDesc");
   const filtersOpen = useLibraryUiStore((state) => state.filtersOpen);
 
   const filteredBooks = useMemo(() => {
-    return sortFinishedBooks(selectFinishedBooks(books), sort).filter((book) => {
-      if (ratingFilter !== 'all' && book.rating !== ratingFilter) return false;
-      if (formatFilter !== 'all' && book.format !== formatFilter) return false;
-      if (categoryFilter !== 'all' && book.category !== categoryFilter) return false;
-      return true;
-    });
+    return sortFinishedBooks(selectFinishedBooks(books), sort).filter(
+      (book) => {
+        if (ratingFilter !== "all" && book.rating !== ratingFilter)
+          return false;
+        if (formatFilter !== "all" && book.format !== formatFilter)
+          return false;
+        if (categoryFilter !== "all" && book.category !== categoryFilter)
+          return false;
+        return true;
+      },
+    );
   }, [books, categoryFilter, formatFilter, ratingFilter, sort]);
 
   const nextBooks = useMemo(() => selectNextBooks(books), [books]);
   const activeFilterCount = [ratingFilter, formatFilter, categoryFilter].filter(
-    (value) => value !== 'all',
+    (value) => value !== "all",
   ).length;
 
   function resetFilters() {
-    setRatingFilter('all');
-    setFormatFilter('all');
-    setCategoryFilter('all');
-    setSort('finishedDesc');
+    setRatingFilter("all");
+    setFormatFilter("all");
+    setCategoryFilter("all");
+    setSort("finishedDesc");
   }
 
   return (
@@ -75,7 +91,9 @@ export default function LibraryPage() {
             </select>
             <select
               value={ratingFilter}
-              onChange={(event) => setRatingFilter(event.target.value as BookRating | 'all')}
+              onChange={(event) =>
+                setRatingFilter(event.target.value as BookRating | "all")
+              }
               className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
             >
               <option value="all">All ratings</option>
@@ -87,7 +105,9 @@ export default function LibraryPage() {
             </select>
             <select
               value={formatFilter}
-              onChange={(event) => setFormatFilter(event.target.value as BookFormat | 'all')}
+              onChange={(event) =>
+                setFormatFilter(event.target.value as BookFormat | "all")
+              }
               className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
             >
               <option value="all">All formats</option>
@@ -97,7 +117,9 @@ export default function LibraryPage() {
             </select>
             <select
               value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value as BookCategory | 'all')}
+              onChange={(event) =>
+                setCategoryFilter(event.target.value as BookCategory | "all")
+              }
               className="rounded-2xl border border-subtle bg-control px-4 py-3 text-sm text-strong"
             >
               <option value="all">All categories</option>
@@ -124,9 +146,8 @@ export default function LibraryPage() {
 
         {nextBooks.length === 0 ? (
           <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
-            <p className="text-lg font-medium text-strong">Nothing waiting in your backlog.</p>
-            <p className="mt-2 text-sm text-muted">
-              Add a book here when you want to remember it without starting it yet.
+            <p className="text-lg font-medium text-strong">
+              Nothing waiting in your backlog.
             </p>
           </div>
         ) : (
@@ -136,15 +157,14 @@ export default function LibraryPage() {
               book={book}
               badges={
                 <>
-                  <BookBadge tone="neutral">{formatBookFormatLabel(book.format)}</BookBadge>
-                  <BookBadge tone="soft">{formatBookCategoryLabel(book.category)}</BookBadge>
+                  <BookBadge tone="neutral">
+                    {formatBookFormatLabel(book.format)}
+                  </BookBadge>
+                  <BookBadge tone="soft">
+                    {formatBookCategoryLabel(book.category)}
+                  </BookBadge>
                   <BookBadge tone="soft">{book.publicationYear}</BookBadge>
                 </>
-              }
-              details={
-                <p className="text-sm text-muted">
-                  Saved for later. Start it when it moves from backlog to active reading.
-                </p>
               }
               actions={
                 <>
@@ -183,8 +203,12 @@ export default function LibraryPage() {
 
         {filteredBooks.length === 0 ? (
           <div className="rounded-[1.75rem] border border-subtle bg-surface p-8 text-center">
-            <p className="text-lg font-medium text-strong">No finished books match the current filters.</p>
-            <p className="mt-2 text-sm text-muted">Try another filter combination or finish a book from your backlog.</p>
+            <p className="text-lg font-medium text-strong">
+              No finished books match the current filters.
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Try another filter combination or finish a book from your backlog.
+            </p>
           </div>
         ) : (
           filteredBooks.map((book) => (
@@ -196,8 +220,12 @@ export default function LibraryPage() {
                   <BookBadge tone={RATING_META[book.rating].tone}>
                     {formatBookRatingLabel(book.rating)}
                   </BookBadge>
-                  <BookBadge tone="neutral">{formatBookFormatLabel(book.format)}</BookBadge>
-                  <BookBadge tone="soft">{formatBookCategoryLabel(book.category)}</BookBadge>
+                  <BookBadge tone="neutral">
+                    {formatBookFormatLabel(book.format)}
+                  </BookBadge>
+                  <BookBadge tone="soft">
+                    {formatBookCategoryLabel(book.category)}
+                  </BookBadge>
                 </>
               }
               actions={
@@ -227,7 +255,9 @@ export default function LibraryPage() {
               }
               footer={
                 <div className="space-y-1 text-sm text-muted">
-                  <p>Finished {formatDisplayDate(book.dateFinished, dateFormat)}</p>
+                  <p>
+                    Finished {formatDisplayDate(book.dateFinished, dateFormat)}
+                  </p>
                   <p>Published {book.publicationYear}</p>
                 </div>
               }
