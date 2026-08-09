@@ -1,4 +1,5 @@
 import LibraryPage from "@/features/library";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import { useBookStore } from "@/shared/store/books";
 import { usePreferencesStore } from "@/shared/store/preferences";
 import { render, screen } from "@testing-library/react";
@@ -26,16 +27,6 @@ describe("LibraryPage", () => {
       ],
       loading: false,
       initialized: true,
-      editorState: { open: false, mode: "create", initialStatus: "next" },
-      finishBookId: null,
-      deleteBookId: null,
-      openCreate: vi.fn(),
-      openEdit: vi.fn(),
-      closeEditor: vi.fn(),
-      openFinish: vi.fn(),
-      closeFinish: vi.fn(),
-      openDelete: vi.fn(),
-      closeDelete: vi.fn(),
       saveBook: vi.fn(),
       finishBook: vi.fn(),
       startBook: vi.fn(),
@@ -44,6 +35,14 @@ describe("LibraryPage", () => {
       initialize: vi.fn(),
       refresh: vi.fn(),
       importBooks: vi.fn(),
+    });
+    useBookUiStore.setState({
+      editorState: { open: false, mode: "create", initialStatus: "next" },
+      finishBookId: null,
+      deleteBookId: null,
+      openEdit: vi.fn(),
+      openFinish: vi.fn(),
+      openDelete: vi.fn(),
     });
   });
 

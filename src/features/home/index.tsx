@@ -1,16 +1,17 @@
 import BookDetailsModal from "@/shared/components/books/BookDetailsModal";
 import BookThumbnailCard from "@/shared/components/books/BookThumbnailCard";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import { useBookStore } from "@/shared/store/books";
 import { selectNextBooks, selectReadingBooks } from "@/shared/utils/stats";
 import { useState } from "react";
 
 export default function Home() {
   const books = useBookStore((state) => state.books);
-  const openEdit = useBookStore((state) => state.openEdit);
-  const openFinish = useBookStore((state) => state.openFinish);
+  const openEdit = useBookUiStore((state) => state.openEdit);
+  const openFinish = useBookUiStore((state) => state.openFinish);
   const startBook = useBookStore((state) => state.startBook);
   const reopenBook = useBookStore((state) => state.reopenBook);
-  const openDelete = useBookStore((state) => state.openDelete);
+  const openDelete = useBookUiStore((state) => state.openDelete);
 
   const [selectedBook, setSelectedBook] = useState<string | null>(null);
 

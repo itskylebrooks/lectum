@@ -1,7 +1,6 @@
 import type {
   BookEditorValues,
   BookFinishValues,
-  BookFormStatus,
   BookWithThumbnail,
 } from "@/shared/types";
 import {
@@ -15,21 +14,6 @@ import {
 import { indexedDbBookRepository as bookRepository } from "@/infrastructure/bookRepository";
 import { create } from "zustand";
 
-type EditorState =
-  | {
-      open: false;
-      mode: "create";
-      bookId?: undefined;
-      initialStatus: BookFormStatus;
-    }
-  | {
-      open: true;
-      mode: "create";
-      bookId?: undefined;
-      initialStatus: BookFormStatus;
-    }
-  | { open: true; mode: "edit"; bookId: string; initialStatus: BookFormStatus };
-
 export type LibraryStatus = "idle" | "loading" | "ready" | "error";
 
 interface BookStoreState {
@@ -38,19 +22,9 @@ interface BookStoreState {
   initialized: boolean;
   status: LibraryStatus;
   error: string | null;
-  editorState: EditorState;
-  finishBookId: string | null;
-  deleteBookId: string | null;
   initialize: () => Promise<void>;
   refresh: () => Promise<void>;
-  openCreate: (initialStatus?: BookFormStatus) => void;
-  openEdit: (bookId: string) => void;
-  closeEditor: () => void;
-  openFinish: (bookId: string) => void;
-  closeFinish: () => void;
-  openDelete: (bookId: string) => void;
-  closeDelete: () => void;
-  saveBook: (values: BookEditorValues) => Promise<void>;
+  saveBook: (values: BookEditorValues, bookId?: string) => Promise<void>;
   finishBook: (bookId: string, values: BookFinishValues) => Promise<void>;
   startBook: (bookId: string) => Promise<void>;
   reopenBook: (bookId: string) => Promise<void>;
@@ -73,10 +47,6 @@ function resolveBook(state: BookStoreState, bookId: string) {
   return state.books.find((book) => book.id === bookId) ?? null;
 }
 
-function closeEditorState(): EditorState {
-  return { open: false, mode: "create", initialStatus: "next" };
-}
-
 function sortBooks(books: BookWithThumbnail[]) {
   return [...books].sort((left, right) =>
     right.updatedAt.localeCompare(left.updatedAt),
@@ -93,9 +63,6 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   initialized: false,
   status: "idle",
   error: null,
-  editorState: closeEditorState(),
-  finishBookId: null,
-  deleteBookId: null,
   initialize: () => {
     if (get().initialized) return Promise.resolve();
     if (initializationPromise) return initializationPromise;
@@ -143,38 +110,13 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
       });
     }
   },
-  openCreate: (initialStatus = "next") =>
-    set({
-      editorState: { open: true, mode: "create", initialStatus },
-    }),
-  openEdit: (bookId) => {
-    const book = resolveBook(get(), bookId);
-    set({
-      editorState: {
-        open: true,
-        mode: "edit",
-        bookId,
-        initialStatus: book?.isReading ? "reading" : "next",
-      },
-    });
-  },
-  closeEditor: () => set({ editorState: closeEditorState() }),
-  openFinish: (bookId) => set({ finishBookId: bookId }),
-  closeFinish: () => set({ finishBookId: null }),
-  openDelete: (bookId) => set({ deleteBookId: bookId }),
-  closeDelete: () => set({ deleteBookId: null }),
-  saveBook: async (values) => {
-    const { editorState } = get();
-    const existing =
-      editorState.open && editorState.mode === "edit"
-        ? resolveBook(get(), editorState.bookId)
-        : null;
+  saveBook: async (values, bookId) => {
+    const existing = bookId ? resolveBook(get(), bookId) : null;
     const book = existing ? updateBook(existing, values) : createBook(values);
     try {
       const saved = await bookRepository.save(book);
       set((state) => ({
         books: upsertBook(state.books, saved),
-        editorState: closeEditorState(),
         initialized: true,
         status: "ready",
         error: null,
@@ -194,7 +136,6 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
       );
       set((state) => ({
         books: upsertBook(state.books, saved),
-        finishBookId: null,
         initialized: true,
         status: "ready",
         error: null,
@@ -245,7 +186,6 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
       await bookRepository.delete(bookId);
       set((state) => ({
         books: state.books.filter((book) => book.id !== bookId),
-        deleteBookId: null,
         initialized: true,
         status: "ready",
         error: null,
@@ -263,9 +203,6 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
         initialized: true,
         status: "ready",
         error: null,
-        editorState: closeEditorState(),
-        finishBookId: null,
-        deleteBookId: null,
       });
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
@@ -281,9 +218,6 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
         initialized: true,
         status: "ready",
         error: null,
-        editorState: closeEditorState(),
-        finishBookId: null,
-        deleteBookId: null,
       });
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });

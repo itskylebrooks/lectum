@@ -7,6 +7,7 @@ import BookEditorModal from "@/shared/components/books/BookEditorModal";
 import FinishBookModal from "@/shared/components/books/FinishBookModal";
 import AppHeader from "@/shared/components/headers/AppHeader";
 import ConfirmModal from "@/shared/components/modals/ConfirmModal";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import { useBookStore } from "@/shared/store/books";
 import type { TargetAndTransition, Transition } from "framer-motion";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -49,15 +50,15 @@ export default function App() {
   const watchExternalChanges = useBookStore(
     (state) => state.watchExternalChanges,
   );
-  const editorState = useBookStore((state) => state.editorState);
-  const closeEditor = useBookStore((state) => state.closeEditor);
   const saveBook = useBookStore((state) => state.saveBook);
-  const finishBookId = useBookStore((state) => state.finishBookId);
-  const closeFinish = useBookStore((state) => state.closeFinish);
   const finishBook = useBookStore((state) => state.finishBook);
-  const deleteBookId = useBookStore((state) => state.deleteBookId);
-  const closeDelete = useBookStore((state) => state.closeDelete);
   const deleteBook = useBookStore((state) => state.deleteBook);
+  const editorState = useBookUiStore((state) => state.editorState);
+  const closeEditor = useBookUiStore((state) => state.closeEditor);
+  const finishBookId = useBookUiStore((state) => state.finishBookId);
+  const closeFinish = useBookUiStore((state) => state.closeFinish);
+  const deleteBookId = useBookUiStore((state) => state.deleteBookId);
+  const closeDelete = useBookUiStore((state) => state.closeDelete);
   const shouldReduceMotion = useReducedMotion();
   const baseMotion = createPageMotion(shouldReduceMotion);
 
@@ -167,7 +168,14 @@ export default function App() {
         book={editingBook}
         initialStatus={editorState.initialStatus}
         onClose={closeEditor}
-        onSave={saveBook}
+        onSave={(values) =>
+          saveBook(
+            values,
+            editorState.open && editorState.mode === "edit"
+              ? editorState.bookId
+              : undefined,
+          )
+        }
       />
 
       <FinishBookModal
@@ -184,9 +192,11 @@ export default function App() {
       <ConfirmModal
         open={Boolean(deletingBook)}
         onClose={closeDelete}
-        onConfirm={() =>
-          deletingBook ? deleteBook(deletingBook.id) : undefined
-        }
+        onConfirm={async () => {
+          if (!deletingBook) return;
+          await deleteBook(deletingBook.id);
+          closeDelete();
+        }}
         destructive
         title="Delete book?"
         message={

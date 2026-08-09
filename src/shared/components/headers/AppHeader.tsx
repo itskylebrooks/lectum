@@ -1,6 +1,6 @@
 import MobileTabBar from "@/shared/components/headers/MobileTabBar";
 import SettingsModal from "@/shared/components/modals/SettingsModal";
-import { useBookStore } from "@/shared/store/books";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import {
   ChartPie,
   Home,
@@ -13,7 +13,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 export default function AppHeader() {
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const openCreate = useBookStore((state) => state.openCreate);
+  const openCreate = useBookUiStore((state) => state.openCreate);
   const location = useLocation();
   const navigate = useNavigate();
   const navLinkBase =

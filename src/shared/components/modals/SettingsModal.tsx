@@ -2,6 +2,7 @@ import ConfirmModal from "@/shared/components/modals/ConfirmModal";
 import { STORAGE_KEYS } from "@/shared/constants/storageKeys";
 import { usePWA } from "@/shared/hooks/usePWA";
 import { useBookStore } from "@/shared/store/books";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import { usePreferencesStore } from "@/shared/store/preferences";
 import useThemeStore from "@/shared/store/theme";
 import {
@@ -253,6 +254,7 @@ export default function SettingsModal({
   async function handleEraseData() {
     try {
       await useBookStore.getState().resetToStarterBooks();
+      useBookUiStore.getState().reset();
       usePreferencesStore.getState().setDateFormat("DMY");
       useThemeStore.getState().setMode("system");
       localStorage.removeItem(STORAGE_KEYS.PREFERENCES);

@@ -1,4 +1,5 @@
 import App from "@/App";
+import { useBookUiStore } from "@/shared/store/bookUi";
 import { useBookStore } from "@/shared/store/books";
 import { usePreferencesStore } from "@/shared/store/preferences";
 import {
@@ -16,10 +17,8 @@ describe("App flow", () => {
       books: [],
       loading: false,
       initialized: false,
-      editorState: { open: false, mode: "create", initialStatus: "next" },
-      finishBookId: null,
-      deleteBookId: null,
     });
+    useBookUiStore.getState().reset();
     usePreferencesStore.setState({ dateFormat: "DMY" });
   });
 

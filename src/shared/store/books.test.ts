@@ -29,9 +29,6 @@ describe("book store", () => {
       initialized: false,
       status: "idle",
       error: null,
-      editorState: { open: false, mode: "create", initialStatus: "next" },
-      finishBookId: null,
-      deleteBookId: null,
     });
   });
 
