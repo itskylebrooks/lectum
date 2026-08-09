@@ -1,26 +1,36 @@
-import type { BookRecord, BookWithThumbnail } from '@/shared/types';
+import type { BookRecord, BookWithThumbnail } from "@/shared/types";
 
 type StoredThumbnail = {
   id: string;
   dataUrl: string;
 };
 
-const DB_NAME = 'lectum-db';
-const DB_VERSION = 1;
-const BOOKS_STORE = 'books';
-const THUMBNAILS_STORE = 'thumbnails';
+type StoredMetadata = {
+  key: string;
+  value: number | boolean | string;
+};
+
+const DB_NAME = "lectum-db";
+const DB_VERSION = 2;
+const BOOKS_STORE = "books";
+const THUMBNAILS_STORE = "thumbnails";
+const METADATA_STORE = "metadata";
+const LIBRARY_INITIALIZED_KEY = "library-initialized";
+const SCHEMA_VERSION_KEY = "schema-version";
 
 const memoryBooks = new Map<string, BookRecord>();
 const memoryThumbnails = new Map<string, string>();
+let memoryLibraryInitialized = false;
 
 function supportsIndexedDb() {
-  return typeof indexedDB !== 'undefined';
+  return typeof indexedDB !== "undefined";
 }
 
 function requestToPromise<T>(request: IDBRequest<T>) {
   return new Promise<T>((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
+    request.onerror = () =>
+      reject(request.error ?? new Error("IndexedDB request failed"));
   });
 }
 
@@ -28,8 +38,9 @@ function transactionDone(transaction: IDBTransaction) {
   return new Promise<void>((resolve, reject) => {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () =>
-      reject(transaction.error ?? new Error('IndexedDB transaction failed'));
-    transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB aborted'));
+      reject(transaction.error ?? new Error("IndexedDB transaction failed"));
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error("IndexedDB aborted"));
   });
 }
 
@@ -39,42 +50,59 @@ function openDatabase() {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(BOOKS_STORE)) {
-        db.createObjectStore(BOOKS_STORE, { keyPath: 'id' });
+        db.createObjectStore(BOOKS_STORE, { keyPath: "id" });
       }
       if (!db.objectStoreNames.contains(THUMBNAILS_STORE)) {
-        db.createObjectStore(THUMBNAILS_STORE, { keyPath: 'id' });
+        db.createObjectStore(THUMBNAILS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(METADATA_STORE)) {
+        db.createObjectStore(METADATA_STORE, { keyPath: "key" });
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
+    request.onerror = () =>
+      reject(request.error ?? new Error("Failed to open IndexedDB"));
   });
 }
 
 function normalizeBookForStorage(book: BookWithThumbnail): BookRecord {
-  const normalized = { ...book } as BookRecord & { thumbnailDataUrl?: string | null };
+  const normalized = { ...book } as BookRecord & {
+    thumbnailDataUrl?: string | null;
+  };
   delete normalized.thumbnailDataUrl;
   return normalized;
 }
 
 function sortBooks(books: BookWithThumbnail[]) {
-  return [...books].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+  return [...books].sort((left, right) =>
+    right.updatedAt.localeCompare(left.updatedAt),
+  );
 }
 
 async function listFromIndexedDb() {
   const db = await openDatabase();
-  const transaction = db.transaction([BOOKS_STORE, THUMBNAILS_STORE], 'readonly');
+  const transaction = db.transaction(
+    [BOOKS_STORE, THUMBNAILS_STORE],
+    "readonly",
+  );
   const bookStore = transaction.objectStore(BOOKS_STORE);
   const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
 
   const books = await requestToPromise(bookStore.getAll());
-  const thumbnails = (await requestToPromise(thumbnailStore.getAll())) as StoredThumbnail[];
+  const thumbnails = (await requestToPromise(
+    thumbnailStore.getAll(),
+  )) as StoredThumbnail[];
   await transactionDone(transaction);
 
-  const thumbnailsById = new Map(thumbnails.map((thumbnail) => [thumbnail.id, thumbnail.dataUrl]));
+  const thumbnailsById = new Map(
+    thumbnails.map((thumbnail) => [thumbnail.id, thumbnail.dataUrl]),
+  );
   return sortBooks(
     (books as BookRecord[]).map((book) => ({
       ...book,
-      thumbnailDataUrl: book.thumbnailId ? thumbnailsById.get(book.thumbnailId) ?? null : null,
+      thumbnailDataUrl: book.thumbnailId
+        ? (thumbnailsById.get(book.thumbnailId) ?? null)
+        : null,
     })),
   );
 }
@@ -83,9 +111,85 @@ function listFromMemory() {
   return sortBooks(
     [...memoryBooks.values()].map((book) => ({
       ...book,
-      thumbnailDataUrl: book.thumbnailId ? memoryThumbnails.get(book.thumbnailId) ?? null : null,
+      thumbnailDataUrl: book.thumbnailId
+        ? (memoryThumbnails.get(book.thumbnailId) ?? null)
+        : null,
     })),
   );
+}
+
+function mergeBooksWithThumbnails(
+  books: BookRecord[],
+  thumbnails: StoredThumbnail[],
+) {
+  const thumbnailsById = new Map(
+    thumbnails.map((thumbnail) => [thumbnail.id, thumbnail.dataUrl]),
+  );
+  return sortBooks(
+    books.map((book) => ({
+      ...book,
+      thumbnailDataUrl: book.thumbnailId
+        ? (thumbnailsById.get(book.thumbnailId) ?? null)
+        : null,
+    })),
+  );
+}
+
+async function initializeIntoIndexedDb(starterBooks: BookWithThumbnail[]) {
+  const db = await openDatabase();
+  const transaction = db.transaction(
+    [BOOKS_STORE, THUMBNAILS_STORE, METADATA_STORE],
+    "readwrite",
+  );
+  const bookStore = transaction.objectStore(BOOKS_STORE);
+  const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
+  const metadataStore = transaction.objectStore(METADATA_STORE);
+
+  const initialized = (await requestToPromise(
+    metadataStore.get(LIBRARY_INITIALIZED_KEY),
+  )) as StoredMetadata | undefined;
+  let books = (await requestToPromise(bookStore.getAll())) as BookRecord[];
+
+  if (!initialized) {
+    if (books.length === 0) {
+      for (const book of starterBooks) {
+        const thumbnailId = book.thumbnailDataUrl
+          ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+          : undefined;
+        bookStore.put(normalizeBookForStorage({ ...book, thumbnailId }));
+        if (thumbnailId && book.thumbnailDataUrl) {
+          thumbnailStore.put({
+            id: thumbnailId,
+            dataUrl: book.thumbnailDataUrl,
+          });
+        }
+      }
+      books = starterBooks.map(normalizeBookForStorage);
+    }
+    metadataStore.put({ key: LIBRARY_INITIALIZED_KEY, value: true });
+  }
+  metadataStore.put({ key: SCHEMA_VERSION_KEY, value: DB_VERSION });
+
+  const thumbnails = (await requestToPromise(
+    thumbnailStore.getAll(),
+  )) as StoredThumbnail[];
+  await transactionDone(transaction);
+  return mergeBooksWithThumbnails(books, thumbnails);
+}
+
+function initializeIntoMemory(starterBooks: BookWithThumbnail[]) {
+  if (!memoryLibraryInitialized) {
+    if (memoryBooks.size === 0) replaceIntoMemory(starterBooks);
+    memoryLibraryInitialized = true;
+  }
+  return listFromMemory();
+}
+
+export async function initializeStoredLibrary(
+  starterBooks: BookWithThumbnail[],
+) {
+  if (!supportsIndexedDb()) return initializeIntoMemory(starterBooks);
+  return initializeIntoIndexedDb(starterBooks);
 }
 
 export async function listStoredBooks() {
@@ -95,12 +199,19 @@ export async function listStoredBooks() {
 
 async function putIntoIndexedDb(book: BookWithThumbnail) {
   const db = await openDatabase();
-  const transaction = db.transaction([BOOKS_STORE, THUMBNAILS_STORE], 'readwrite');
+  const transaction = db.transaction(
+    [BOOKS_STORE, THUMBNAILS_STORE],
+    "readwrite",
+  );
   const bookStore = transaction.objectStore(BOOKS_STORE);
   const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
 
-  const thumbnailId = book.thumbnailDataUrl ? book.thumbnailId ?? `thumbnail:${book.id}` : undefined;
-  const previous = (await requestToPromise(bookStore.get(book.id))) as BookRecord | undefined;
+  const thumbnailId = book.thumbnailDataUrl
+    ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+    : undefined;
+  const previous = (await requestToPromise(bookStore.get(book.id))) as
+    | BookRecord
+    | undefined;
 
   if (previous?.thumbnailId && previous.thumbnailId !== thumbnailId) {
     thumbnailStore.delete(previous.thumbnailId);
@@ -128,7 +239,9 @@ async function putIntoIndexedDb(book: BookWithThumbnail) {
 }
 
 function putIntoMemory(book: BookWithThumbnail) {
-  const thumbnailId = book.thumbnailDataUrl ? book.thumbnailId ?? `thumbnail:${book.id}` : undefined;
+  const thumbnailId = book.thumbnailDataUrl
+    ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+    : undefined;
   const previous = memoryBooks.get(book.id);
 
   if (previous?.thumbnailId && previous.thumbnailId !== thumbnailId) {
@@ -146,7 +259,10 @@ function putIntoMemory(book: BookWithThumbnail) {
     thumbnailId,
   };
   memoryBooks.set(stored.id, stored);
-  return { ...stored, thumbnailDataUrl: book.thumbnailDataUrl ?? null } satisfies BookWithThumbnail;
+  return {
+    ...stored,
+    thumbnailDataUrl: book.thumbnailDataUrl ?? null,
+  } satisfies BookWithThumbnail;
 }
 
 export async function saveStoredBook(book: BookWithThumbnail) {
@@ -156,10 +272,15 @@ export async function saveStoredBook(book: BookWithThumbnail) {
 
 async function deleteFromIndexedDb(bookId: string) {
   const db = await openDatabase();
-  const transaction = db.transaction([BOOKS_STORE, THUMBNAILS_STORE], 'readwrite');
+  const transaction = db.transaction(
+    [BOOKS_STORE, THUMBNAILS_STORE],
+    "readwrite",
+  );
   const bookStore = transaction.objectStore(BOOKS_STORE);
   const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
-  const existing = (await requestToPromise(bookStore.get(bookId))) as BookRecord | undefined;
+  const existing = (await requestToPromise(bookStore.get(bookId))) as
+    | BookRecord
+    | undefined;
 
   if (existing?.thumbnailId) {
     thumbnailStore.delete(existing.thumbnailId);
@@ -188,15 +309,21 @@ export async function deleteStoredBook(bookId: string) {
 
 async function replaceIntoIndexedDb(books: BookWithThumbnail[]) {
   const db = await openDatabase();
-  const transaction = db.transaction([BOOKS_STORE, THUMBNAILS_STORE], 'readwrite');
+  const transaction = db.transaction(
+    [BOOKS_STORE, THUMBNAILS_STORE, METADATA_STORE],
+    "readwrite",
+  );
   const bookStore = transaction.objectStore(BOOKS_STORE);
   const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
+  const metadataStore = transaction.objectStore(METADATA_STORE);
 
   bookStore.clear();
   thumbnailStore.clear();
 
   for (const book of books) {
-    const thumbnailId = book.thumbnailDataUrl ? book.thumbnailId ?? `thumbnail:${book.id}` : undefined;
+    const thumbnailId = book.thumbnailDataUrl
+      ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+      : undefined;
     bookStore.put(
       normalizeBookForStorage({
         ...book,
@@ -207,6 +334,8 @@ async function replaceIntoIndexedDb(books: BookWithThumbnail[]) {
       thumbnailStore.put({ id: thumbnailId, dataUrl: book.thumbnailDataUrl });
     }
   }
+  metadataStore.put({ key: LIBRARY_INITIALIZED_KEY, value: true });
+  metadataStore.put({ key: SCHEMA_VERSION_KEY, value: DB_VERSION });
 
   await transactionDone(transaction);
 }
@@ -216,7 +345,9 @@ function replaceIntoMemory(books: BookWithThumbnail[]) {
   memoryThumbnails.clear();
 
   for (const book of books) {
-    const thumbnailId = book.thumbnailDataUrl ? book.thumbnailId ?? `thumbnail:${book.id}` : undefined;
+    const thumbnailId = book.thumbnailDataUrl
+      ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+      : undefined;
     memoryBooks.set(book.id, {
       ...normalizeBookForStorage(book),
       thumbnailId,
@@ -225,6 +356,7 @@ function replaceIntoMemory(books: BookWithThumbnail[]) {
       memoryThumbnails.set(thumbnailId, book.thumbnailDataUrl);
     }
   }
+  memoryLibraryInitialized = true;
 }
 
 export async function replaceStoredBooks(books: BookWithThumbnail[]) {
@@ -239,4 +371,5 @@ export async function replaceStoredBooks(books: BookWithThumbnail[]) {
 export function resetStoredBooksForTests() {
   memoryBooks.clear();
   memoryThumbnails.clear();
+  memoryLibraryInitialized = false;
 }

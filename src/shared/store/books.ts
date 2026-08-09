@@ -6,6 +6,7 @@ import type {
 } from "@/shared/types";
 import {
   deleteStoredBook,
+  initializeStoredLibrary,
   listStoredBooks,
   replaceStoredBooks,
   saveStoredBook,
@@ -219,13 +220,7 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   initialize: async () => {
     if (get().initialized) return;
     set({ loading: true });
-    const books = await listStoredBooks();
-    if (books.length === 0) {
-      const starterBooks = createStarterBooks();
-      await replaceStoredBooks(starterBooks);
-      set({ books: starterBooks, loading: false, initialized: true });
-      return;
-    }
+    const books = await initializeStoredLibrary(createStarterBooks());
     set({ books, loading: false, initialized: true });
   },
   refresh: async () => {

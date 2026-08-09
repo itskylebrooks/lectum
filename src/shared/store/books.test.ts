@@ -109,4 +109,19 @@ describe("book store", () => {
     expect(books.some((book) => book.title === "Temporary")).toBe(false);
     expect(books.some((book) => book.title === "Steve Jobs")).toBe(true);
   });
+
+  it("keeps an intentionally empty library empty after reinitialization", async () => {
+    await useBookStore.getState().initialize();
+    const ids = useBookStore.getState().books.map((book) => book.id);
+
+    for (const id of ids) {
+      await useBookStore.getState().deleteBook(id);
+    }
+    expect(useBookStore.getState().books).toEqual([]);
+
+    useBookStore.setState({ initialized: false });
+    await useBookStore.getState().initialize();
+
+    expect(useBookStore.getState().books).toEqual([]);
+  });
 });
