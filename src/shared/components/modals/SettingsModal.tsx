@@ -7,6 +7,7 @@ import { usePreferencesStore } from "@/shared/store/preferences";
 import useThemeStore from "@/shared/store/theme";
 import {
   buildExportPayload,
+  MAX_IMPORT_BYTES,
   parseImportPayload,
 } from "@/shared/utils/dataTransfer";
 import {
@@ -200,6 +201,15 @@ export default function SettingsModal({
   async function handleFileChosen(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_IMPORT_BYTES) {
+      showStatus(
+        "Import failed",
+        "That backup is too large to import. The maximum size is 50 MB.",
+      );
+      event.target.value = "";
+      return;
+    }
 
     setImporting(true);
     try {

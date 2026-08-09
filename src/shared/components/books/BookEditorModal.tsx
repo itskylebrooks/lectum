@@ -27,6 +27,7 @@ interface BookEditorModalProps {
 
 const formats: BookFormat[] = ["print", "digital", "audiobook"];
 const categories: BookCategory[] = ["fiction", "non-fiction"];
+const MAX_THUMBNAIL_SOURCE_BYTES = 15 * 1024 * 1024;
 
 type LayerPhase = "enter" | "exit" | "idle";
 type LayerDir = "forward" | "back";
@@ -170,10 +171,21 @@ export default function BookEditorModal({
   ) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const result = await fileToDataUrl(file);
-    setCropSource(result);
-    setCropMimeType(file.type || "image/jpeg");
-    event.target.value = "";
+    if (file.size > MAX_THUMBNAIL_SOURCE_BYTES) {
+      setError("Choose an image smaller than 15 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const result = await fileToDataUrl(file);
+      setCropSource(result);
+      setCropMimeType(file.type || "image/jpeg");
+    } catch {
+      setError("Lectum could not read that image. Please choose another one.");
+    } finally {
+      event.target.value = "";
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

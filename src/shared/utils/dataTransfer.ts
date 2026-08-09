@@ -9,7 +9,7 @@ import type {
 
 const APP_NAME = "lectum";
 const EXPORT_SCHEMA_VERSION = "1.0.0";
-const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
+export const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
 const MAX_IMPORT_BOOKS = 10_000;
 const BOOK_FORMATS: ReadonlySet<BookFormat> = new Set([
   "print",
