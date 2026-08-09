@@ -207,7 +207,9 @@ export default function SettingsModal({
           "Import failed",
           parsed.reason === "not_lectum"
             ? "That file is not a Lectum export."
-            : "Import failed. Check the file and try again.",
+            : parsed.reason === "unsupported_version"
+              ? "This export was created by an unsupported Lectum version."
+              : "Import failed. Check the file and try again.",
         );
         return;
       }

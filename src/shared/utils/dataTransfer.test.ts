@@ -57,4 +57,51 @@ describe("data transfer", () => {
     const parsed = parseImportPayload(JSON.stringify({ app: "other-app" }));
     expect(parsed).toEqual({ ok: false, reason: "not_lectum" });
   });
+
+  it("rejects missing, unsupported, and partially invalid payloads", () => {
+    const validPayload = buildExportPayload({
+      books: sampleBooks,
+      settings: { themeMode: "dark", dateFormat: "MDY" },
+    });
+
+    expect(parseImportPayload(JSON.stringify({ app: "lectum" }))).toEqual({
+      ok: false,
+      reason: "unsupported_version",
+    });
+    expect(
+      parseImportPayload(JSON.stringify({ ...validPayload, version: "2.0.0" })),
+    ).toEqual({ ok: false, reason: "unsupported_version" });
+    expect(
+      parseImportPayload(
+        JSON.stringify({
+          ...validPayload,
+          books: [...sampleBooks, { ...sampleBooks[0], format: "scroll" }],
+        }),
+      ),
+    ).toEqual({ ok: false, reason: "invalid" });
+  });
+
+  it("rejects duplicate ids and inconsistent finished-book state", () => {
+    const validPayload = buildExportPayload({
+      books: sampleBooks,
+      settings: { themeMode: "system", dateFormat: "DMY" },
+    });
+
+    expect(
+      parseImportPayload(
+        JSON.stringify({
+          ...validPayload,
+          books: [sampleBooks[0], { ...sampleBooks[1], id: sampleBooks[0].id }],
+        }),
+      ),
+    ).toEqual({ ok: false, reason: "invalid" });
+    expect(
+      parseImportPayload(
+        JSON.stringify({
+          ...validPayload,
+          books: [{ ...sampleBooks[0], isReading: true }],
+        }),
+      ),
+    ).toEqual({ ok: false, reason: "invalid" });
+  });
 });
