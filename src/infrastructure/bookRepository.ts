@@ -5,6 +5,7 @@ import {
   listStoredBooks,
   replaceStoredBooks,
   saveStoredBook,
+  subscribeToStoredBookChanges,
 } from "@/shared/utils/booksDb";
 
 export interface BookRepository {
@@ -14,7 +15,8 @@ export interface BookRepository {
   list: () => Promise<BookWithThumbnail[]>;
   save: (book: BookWithThumbnail) => Promise<BookWithThumbnail>;
   delete: (bookId: string) => Promise<void>;
-  replaceAll: (books: BookWithThumbnail[]) => Promise<void>;
+  replaceAll: (books: BookWithThumbnail[]) => Promise<BookWithThumbnail[]>;
+  subscribe: (onChange: () => void) => () => void;
 }
 
 export const indexedDbBookRepository: BookRepository = {
@@ -23,4 +25,5 @@ export const indexedDbBookRepository: BookRepository = {
   save: saveStoredBook,
   delete: deleteStoredBook,
   replaceAll: replaceStoredBooks,
+  subscribe: subscribeToStoredBookChanges,
 };

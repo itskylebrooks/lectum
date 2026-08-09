@@ -46,6 +46,9 @@ export default function App() {
   const books = useBookStore((state) => state.books);
   const libraryStatus = useBookStore((state) => state.status);
   const libraryError = useBookStore((state) => state.error);
+  const watchExternalChanges = useBookStore(
+    (state) => state.watchExternalChanges,
+  );
   const editorState = useBookStore((state) => state.editorState);
   const closeEditor = useBookStore((state) => state.closeEditor);
   const saveBook = useBookStore((state) => state.saveBook);
@@ -61,6 +64,8 @@ export default function App() {
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  useEffect(() => watchExternalChanges(), [watchExternalChanges]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

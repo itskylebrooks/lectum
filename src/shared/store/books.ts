@@ -57,6 +57,7 @@ interface BookStoreState {
   deleteBook: (bookId: string) => Promise<void>;
   importBooks: (books: BookWithThumbnail[]) => Promise<void>;
   resetToStarterBooks: () => Promise<void>;
+  watchExternalChanges: () => () => void;
 }
 
 function persistenceErrorMessage(error: unknown) {
@@ -74,6 +75,16 @@ function resolveBook(state: BookStoreState, bookId: string) {
 
 function closeEditorState(): EditorState {
   return { open: false, mode: "create", initialStatus: "next" };
+}
+
+function sortBooks(books: BookWithThumbnail[]) {
+  return [...books].sort((left, right) =>
+    right.updatedAt.localeCompare(left.updatedAt),
+  );
+}
+
+function upsertBook(books: BookWithThumbnail[], saved: BookWithThumbnail) {
+  return sortBooks([saved, ...books.filter((book) => book.id !== saved.id)]);
 }
 
 export const useBookStore = create<BookStoreState>((set, get) => ({
@@ -160,15 +171,14 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
         : null;
     const book = existing ? updateBook(existing, values) : createBook(values);
     try {
-      await bookRepository.save(book);
-      const books = await bookRepository.list();
-      set({
-        books,
+      const saved = await bookRepository.save(book);
+      set((state) => ({
+        books: upsertBook(state.books, saved),
         editorState: closeEditorState(),
         initialized: true,
         status: "ready",
         error: null,
-      });
+      }));
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
       throw error;
@@ -179,16 +189,16 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
     if (!existing) return;
 
     try {
-      await bookRepository.save(finishBookRecord(existing, values));
-
-      const books = await bookRepository.list();
-      set({
-        books,
+      const saved = await bookRepository.save(
+        finishBookRecord(existing, values),
+      );
+      set((state) => ({
+        books: upsertBook(state.books, saved),
         finishBookId: null,
         initialized: true,
         status: "ready",
         error: null,
-      });
+      }));
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
       throw error;
@@ -201,10 +211,13 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
     if (!started) return;
 
     try {
-      await bookRepository.save(started);
-
-      const books = await bookRepository.list();
-      set({ books, initialized: true, status: "ready", error: null });
+      const saved = await bookRepository.save(started);
+      set((state) => ({
+        books: upsertBook(state.books, saved),
+        initialized: true,
+        status: "ready",
+        error: null,
+      }));
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
       throw error;
@@ -215,10 +228,13 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
     if (!existing) return;
 
     try {
-      await bookRepository.save(reopenBookRecord(existing));
-
-      const books = await bookRepository.list();
-      set({ books, initialized: true, status: "ready", error: null });
+      const saved = await bookRepository.save(reopenBookRecord(existing));
+      set((state) => ({
+        books: upsertBook(state.books, saved),
+        initialized: true,
+        status: "ready",
+        error: null,
+      }));
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
       throw error;
@@ -227,14 +243,13 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   deleteBook: async (bookId) => {
     try {
       await bookRepository.delete(bookId);
-      const books = await bookRepository.list();
-      set({
-        books,
+      set((state) => ({
+        books: state.books.filter((book) => book.id !== bookId),
         deleteBookId: null,
         initialized: true,
         status: "ready",
         error: null,
-      });
+      }));
     } catch (error) {
       set({ status: "error", error: persistenceErrorMessage(error) });
       throw error;
@@ -242,8 +257,7 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   },
   importBooks: async (books) => {
     try {
-      await bookRepository.replaceAll(books);
-      const refreshed = await bookRepository.list();
+      const refreshed = await bookRepository.replaceAll(books);
       set({
         books: refreshed,
         initialized: true,
@@ -261,9 +275,9 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   resetToStarterBooks: async () => {
     const starterBooks = createStarterBooks();
     try {
-      await bookRepository.replaceAll(starterBooks);
+      const stored = await bookRepository.replaceAll(starterBooks);
       set({
-        books: starterBooks,
+        books: stored,
         initialized: true,
         status: "ready",
         error: null,
@@ -276,4 +290,8 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
       throw error;
     }
   },
+  watchExternalChanges: () =>
+    bookRepository.subscribe(() => {
+      void get().refresh();
+    }),
 }));

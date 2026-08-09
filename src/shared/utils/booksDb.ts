@@ -17,10 +17,14 @@ const THUMBNAILS_STORE = "thumbnails";
 const METADATA_STORE = "metadata";
 const LIBRARY_INITIALIZED_KEY = "library-initialized";
 const SCHEMA_VERSION_KEY = "schema-version";
+const CHANGES_CHANNEL = "lectum-book-changes";
 
 const memoryBooks = new Map<string, BookRecord>();
 const memoryThumbnails = new Map<string, string>();
 let memoryLibraryInitialized = false;
+let databasePromise: Promise<IDBDatabase> | null = null;
+let writeQueue: Promise<void> = Promise.resolve();
+let changesChannel: BroadcastChannel | null = null;
 
 function supportsIndexedDb() {
   return typeof indexedDB !== "undefined";
@@ -45,7 +49,9 @@ function transactionDone(transaction: IDBTransaction) {
 }
 
 function openDatabase() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
+  if (databasePromise) return databasePromise;
+
+  databasePromise = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -59,10 +65,48 @@ function openDatabase() {
         db.createObjectStore(METADATA_STORE, { keyPath: "key" });
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        databasePromise = null;
+      };
+      resolve(db);
+    };
+    request.onerror = () => {
+      databasePromise = null;
       reject(request.error ?? new Error("Failed to open IndexedDB"));
+    };
+    request.onblocked = () => {
+      databasePromise = null;
+      reject(new Error("IndexedDB upgrade was blocked by another tab"));
+    };
   });
+  return databasePromise;
+}
+
+function enqueueWrite<T>(operation: () => Promise<T> | T) {
+  const pending = writeQueue.then(operation, operation);
+  writeQueue = pending.then(
+    () => undefined,
+    () => undefined,
+  );
+  return pending;
+}
+
+function getChangesChannel() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.BroadcastChannel === "undefined"
+  ) {
+    return null;
+  }
+  changesChannel ??= new window.BroadcastChannel(CHANGES_CHANNEL);
+  return changesChannel;
+}
+
+function publishStoredBookChange() {
+  getChangesChannel()?.postMessage({ type: "books-changed" });
 }
 
 function normalizeBookForStorage(book: BookWithThumbnail): BookRecord {
@@ -188,11 +232,14 @@ function initializeIntoMemory(starterBooks: BookWithThumbnail[]) {
 export async function initializeStoredLibrary(
   starterBooks: BookWithThumbnail[],
 ) {
-  if (!supportsIndexedDb()) return initializeIntoMemory(starterBooks);
-  return initializeIntoIndexedDb(starterBooks);
+  return enqueueWrite(async () => {
+    if (!supportsIndexedDb()) return initializeIntoMemory(starterBooks);
+    return initializeIntoIndexedDb(starterBooks);
+  });
 }
 
 export async function listStoredBooks() {
+  await writeQueue;
   if (!supportsIndexedDb()) return listFromMemory();
   return listFromIndexedDb();
 }
@@ -266,8 +313,13 @@ function putIntoMemory(book: BookWithThumbnail) {
 }
 
 export async function saveStoredBook(book: BookWithThumbnail) {
-  if (!supportsIndexedDb()) return putIntoMemory(book);
-  return putIntoIndexedDb(book);
+  return enqueueWrite(async () => {
+    const saved = !supportsIndexedDb()
+      ? putIntoMemory(book)
+      : await putIntoIndexedDb(book);
+    publishStoredBookChange();
+    return saved;
+  });
 }
 
 async function deleteFromIndexedDb(bookId: string) {
@@ -299,12 +351,14 @@ function deleteFromMemory(bookId: string) {
 }
 
 export async function deleteStoredBook(bookId: string) {
-  if (!supportsIndexedDb()) {
-    deleteFromMemory(bookId);
-    return;
-  }
-
-  await deleteFromIndexedDb(bookId);
+  return enqueueWrite(async () => {
+    if (!supportsIndexedDb()) {
+      deleteFromMemory(bookId);
+    } else {
+      await deleteFromIndexedDb(bookId);
+    }
+    publishStoredBookChange();
+  });
 }
 
 async function replaceIntoIndexedDb(books: BookWithThumbnail[]) {
@@ -338,6 +392,15 @@ async function replaceIntoIndexedDb(books: BookWithThumbnail[]) {
   metadataStore.put({ key: SCHEMA_VERSION_KEY, value: DB_VERSION });
 
   await transactionDone(transaction);
+  return sortBooks(
+    books.map((book) => ({
+      ...book,
+      thumbnailId: book.thumbnailDataUrl
+        ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+        : undefined,
+      thumbnailDataUrl: book.thumbnailDataUrl ?? null,
+    })),
+  );
 }
 
 function replaceIntoMemory(books: BookWithThumbnail[]) {
@@ -357,19 +420,33 @@ function replaceIntoMemory(books: BookWithThumbnail[]) {
     }
   }
   memoryLibraryInitialized = true;
+  return listFromMemory();
 }
 
 export async function replaceStoredBooks(books: BookWithThumbnail[]) {
-  if (!supportsIndexedDb()) {
-    replaceIntoMemory(books);
-    return;
-  }
+  return enqueueWrite(async () => {
+    const stored = !supportsIndexedDb()
+      ? replaceIntoMemory(books)
+      : await replaceIntoIndexedDb(books);
+    publishStoredBookChange();
+    return stored;
+  });
+}
 
-  await replaceIntoIndexedDb(books);
+export function subscribeToStoredBookChanges(onChange: () => void) {
+  const channel = getChangesChannel();
+  if (!channel) return () => undefined;
+
+  const listener = (event: MessageEvent<{ type?: string }>) => {
+    if (event.data?.type === "books-changed") onChange();
+  };
+  channel.addEventListener("message", listener);
+  return () => channel.removeEventListener("message", listener);
 }
 
 export function resetStoredBooksForTests() {
   memoryBooks.clear();
   memoryThumbnails.clear();
   memoryLibraryInitialized = false;
+  writeQueue = Promise.resolve();
 }
