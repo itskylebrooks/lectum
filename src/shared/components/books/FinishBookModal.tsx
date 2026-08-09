@@ -36,6 +36,8 @@ export default function FinishBookModal({
 
   useEffect(() => {
     if (!open) return;
+    // Prop-driven modal lifecycle intentionally resets its internal form state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDateFinished(book?.dateFinished ?? todayDateInputValue());
     setRating(book?.rating ?? "liked");
     setSubmitting(false);

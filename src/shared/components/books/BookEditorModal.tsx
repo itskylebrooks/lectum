@@ -105,6 +105,8 @@ export default function BookEditorModal({
         timeoutRef.current = null;
       }
       if (enterRaf.current) cancelAnimationFrame(enterRaf.current);
+      // Prop-driven modal lifecycle intentionally resets its internal form and animation state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true);
       setClosing(false);
       setEntering(true);

@@ -370,28 +370,39 @@ async function replaceIntoIndexedDb(books: BookWithThumbnail[]) {
   const bookStore = transaction.objectStore(BOOKS_STORE);
   const thumbnailStore = transaction.objectStore(THUMBNAILS_STORE);
   const metadataStore = transaction.objectStore(METADATA_STORE);
+  const completion = transactionDone(transaction);
 
-  bookStore.clear();
-  thumbnailStore.clear();
+  try {
+    bookStore.clear();
+    thumbnailStore.clear();
 
-  for (const book of books) {
-    const thumbnailId = book.thumbnailDataUrl
-      ? (book.thumbnailId ?? `thumbnail:${book.id}`)
-      : undefined;
-    bookStore.put(
-      normalizeBookForStorage({
-        ...book,
-        thumbnailId,
-      }),
-    );
-    if (thumbnailId && book.thumbnailDataUrl) {
-      thumbnailStore.put({ id: thumbnailId, dataUrl: book.thumbnailDataUrl });
+    for (const book of books) {
+      const thumbnailId = book.thumbnailDataUrl
+        ? (book.thumbnailId ?? `thumbnail:${book.id}`)
+        : undefined;
+      bookStore.put(
+        normalizeBookForStorage({
+          ...book,
+          thumbnailId,
+        }),
+      );
+      if (thumbnailId && book.thumbnailDataUrl) {
+        thumbnailStore.put({ id: thumbnailId, dataUrl: book.thumbnailDataUrl });
+      }
     }
-  }
-  metadataStore.put({ key: LIBRARY_INITIALIZED_KEY, value: true });
-  metadataStore.put({ key: SCHEMA_VERSION_KEY, value: DB_VERSION });
+    metadataStore.put({ key: LIBRARY_INITIALIZED_KEY, value: true });
+    metadataStore.put({ key: SCHEMA_VERSION_KEY, value: DB_VERSION });
 
-  await transactionDone(transaction);
+    await completion;
+  } catch (error) {
+    try {
+      transaction.abort();
+    } catch {
+      // The transaction may already have aborted because of the original error.
+    }
+    await completion.catch(() => undefined);
+    throw error;
+  }
   return sortBooks(
     books.map((book) => ({
       ...book,
@@ -449,4 +460,23 @@ export function resetStoredBooksForTests() {
   memoryThumbnails.clear();
   memoryLibraryInitialized = false;
   writeQueue = Promise.resolve();
+}
+
+export async function resetStoredDatabaseForTests() {
+  await writeQueue;
+  const db = databasePromise ? await databasePromise.catch(() => null) : null;
+  db?.close();
+  databasePromise = null;
+  changesChannel?.close();
+  changesChannel = null;
+  resetStoredBooksForTests();
+
+  if (!supportsIndexedDb()) return;
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () =>
+      reject(request.error ?? new Error("Failed to reset IndexedDB"));
+    request.onblocked = () => reject(new Error("IndexedDB reset was blocked"));
+  });
 }

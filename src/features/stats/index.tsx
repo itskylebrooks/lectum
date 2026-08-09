@@ -14,7 +14,7 @@ import {
   ChevronRight,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const MONTH_KEYS = [
   "01",
@@ -171,11 +171,10 @@ export default function StatsPage() {
   );
   const latestYear =
     availableYears[availableYears.length - 1] ?? new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<number>(latestYear);
-
-  useEffect(() => {
-    setSelectedYear(latestYear);
-  }, [latestYear]);
+  const [requestedYear, setSelectedYear] = useState<number>(latestYear);
+  const selectedYear = availableYears.includes(requestedYear)
+    ? requestedYear
+    : latestYear;
 
   const monthCountByLabel = useMemo(
     () => new Map(stats.perMonth.map((item) => [item.label, item.count])),
@@ -227,11 +226,11 @@ export default function StatsPage() {
   const latestCentury =
     availableCenturies[availableCenturies.length - 1] ??
     Math.floor(new Date().getFullYear() / 100) * 100;
-  const [selectedCentury, setSelectedCentury] = useState<number>(latestCentury);
-
-  useEffect(() => {
-    setSelectedCentury(latestCentury);
-  }, [latestCentury]);
+  const [requestedCentury, setSelectedCentury] =
+    useState<number>(latestCentury);
+  const selectedCentury = availableCenturies.includes(requestedCentury)
+    ? requestedCentury
+    : latestCentury;
 
   const selectedCenturyIndex = availableCenturies.indexOf(selectedCentury);
   const selectedCenturyItems =

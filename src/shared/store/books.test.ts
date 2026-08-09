@@ -1,6 +1,7 @@
+import { indexedDbBookRepository } from "@/infrastructure/bookRepository";
 import { useBookStore } from "@/shared/store/books";
 import { resetStoredBooksForTests } from "@/shared/utils/booksDb";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 function expectedMonthDate(offset: number) {
   const now = new Date();
@@ -26,6 +27,8 @@ describe("book store", () => {
       books: [],
       loading: false,
       initialized: false,
+      status: "idle",
+      error: null,
       editorState: { open: false, mode: "create", initialStatus: "next" },
       finishBookId: null,
       deleteBookId: null,
@@ -123,5 +126,28 @@ describe("book store", () => {
     await useBookStore.getState().initialize();
 
     expect(useBookStore.getState().books).toEqual([]);
+  });
+
+  it("exposes initialization failures and allows retry", async () => {
+    const initialize = vi
+      .spyOn(indexedDbBookRepository, "initialize")
+      .mockRejectedValueOnce(new DOMException("Blocked", "InvalidStateError"));
+
+    await useBookStore.getState().initialize();
+
+    expect(useBookStore.getState()).toMatchObject({
+      loading: false,
+      initialized: false,
+      status: "error",
+      error: "Lectum could not access its local data. Please try again.",
+    });
+
+    initialize.mockRestore();
+    await useBookStore.getState().initialize();
+    expect(useBookStore.getState()).toMatchObject({
+      initialized: true,
+      status: "ready",
+      error: null,
+    });
   });
 });
