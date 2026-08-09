@@ -1,3 +1,4 @@
+import type { BookRepository } from "@/application/bookRepository";
 import type { BookRecord, BookWithThumbnail } from "@/shared/types";
 
 type StoredThumbnail = {
@@ -480,3 +481,12 @@ export async function resetStoredDatabaseForTests() {
     request.onblocked = () => reject(new Error("IndexedDB reset was blocked"));
   });
 }
+
+export const indexedDbBookRepository: BookRepository = {
+  initialize: initializeStoredLibrary,
+  list: listStoredBooks,
+  save: saveStoredBook,
+  delete: deleteStoredBook,
+  replaceAll: replaceStoredBooks,
+  subscribe: subscribeToStoredBookChanges,
+};

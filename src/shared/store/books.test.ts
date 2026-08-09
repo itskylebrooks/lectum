@@ -1,6 +1,8 @@
-import { indexedDbBookRepository } from "@/infrastructure/bookRepository";
+import {
+  indexedDbBookRepository,
+  resetStoredBooksForTests,
+} from "@/infrastructure/indexedDbBookRepository";
 import { useBookStore } from "@/shared/store/books";
-import { resetStoredBooksForTests } from "@/shared/utils/booksDb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 function expectedMonthDate(offset: number) {

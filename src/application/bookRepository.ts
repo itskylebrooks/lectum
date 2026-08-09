@@ -1,12 +1,4 @@
 import type { BookWithThumbnail } from "@/shared/types";
-import {
-  deleteStoredBook,
-  initializeStoredLibrary,
-  listStoredBooks,
-  replaceStoredBooks,
-  saveStoredBook,
-  subscribeToStoredBookChanges,
-} from "@/shared/utils/booksDb";
 
 export interface BookRepository {
   initialize: (
@@ -18,12 +10,3 @@ export interface BookRepository {
   replaceAll: (books: BookWithThumbnail[]) => Promise<BookWithThumbnail[]>;
   subscribe: (onChange: () => void) => () => void;
 }
-
-export const indexedDbBookRepository: BookRepository = {
-  initialize: initializeStoredLibrary,
-  list: listStoredBooks,
-  save: saveStoredBook,
-  delete: deleteStoredBook,
-  replaceAll: replaceStoredBooks,
-  subscribe: subscribeToStoredBookChanges,
-};

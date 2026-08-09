@@ -5,7 +5,7 @@ import {
   replaceStoredBooks,
   resetStoredDatabaseForTests,
   saveStoredBook,
-} from "@/shared/utils/booksDb";
+} from "@/infrastructure/indexedDbBookRepository";
 import { IDBFactory } from "fake-indexeddb";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

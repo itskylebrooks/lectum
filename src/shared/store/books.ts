@@ -11,7 +11,7 @@ import {
   startBook as startBookRecord,
   updateBook,
 } from "@/domain/books";
-import { indexedDbBookRepository as bookRepository } from "@/infrastructure/bookRepository";
+import { indexedDbBookRepository as bookRepository } from "@/infrastructure/indexedDbBookRepository";
 import { create } from "zustand";
 
 export type LibraryStatus = "idle" | "loading" | "ready" | "error";
