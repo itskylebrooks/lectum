@@ -119,13 +119,16 @@ High-level layout:
 
 - `src/`
   - `App.tsx`, `main.tsx` - app shell and routing
+  - `domain/` - pure book creation and reading-state transitions
+  - `application/` - persistence contracts used by application state
+  - `infrastructure/` - IndexedDB repository, schema metadata, and migrations
   - `features/`
     - `home/` - current reading and next queue
     - `library/` - finished-books browsing, filters, sorting
     - `stats/` - aggregated reading insights and charts
     - `sync/` - planned sync direction page
   - `shared/`
-    - `store/` - state stores and actions
+    - `store/` - application data state, UI state, and preferences
     - `components/` - reusable UI components and modals
     - `utils/` - stats, storage, import/export, date helpers
     - `types/` - shared type definitions
@@ -140,6 +143,7 @@ PRs are welcome.
 - Keep changes scoped and easy to review
 - Add or update tests when behavior changes
 - Preserve local-first behavior for core tracking
+- Run `pnpm run ci` before committing
 
 ## License
 
