@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 interface ConfirmModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title?: string;
   message?: ReactNode;
   confirmLabel?: string;
@@ -33,6 +33,8 @@ export default function ConfirmModal({
   const [displayMessage, setDisplayMessage] = useState<ReactNode>(message);
   const [displayConfirmLabel, setDisplayConfirmLabel] = useState(confirmLabel);
   const [displayCancelLabel, setDisplayCancelLabel] = useState(cancelLabel);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const closeTimer = useRef<number | null>(null);
   const enterRaf = useRef<number | null>(null);
 
@@ -51,6 +53,8 @@ export default function ConfirmModal({
       setDisplayMessage(message);
       setDisplayConfirmLabel(confirmLabel);
       setDisplayCancelLabel(cancelLabel);
+      setSubmitting(false);
+      setError(null);
       enterRaf.current = requestAnimationFrame(() => {
         enterRaf.current = requestAnimationFrame(() => setEntering(false));
       });
@@ -110,25 +114,37 @@ export default function ConfirmModal({
             {displayMessage}
           </div>
         ) : null}
+        {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
 
         <div className="mt-5 flex items-center justify-end gap-2">
           <button
             className="rounded-md border border-subtle px-3 py-2 text-sm font-medium bg-surface text-strong hover-nonaccent"
             onClick={() => {
-              if (!closing) onClose();
+              if (!closing && !submitting) onClose();
             }}
+            disabled={submitting}
           >
             {displayCancelLabel}
           </button>
           <button
             className={`rounded-md px-3 py-2 text-sm font-medium ${destructive ? "bg-danger hover:bg-danger-soft text-inverse" : confirmVariant === "success" ? "bg-success text-inverse hover:bg-success-soft" : "bg-accent text-inverse hover:bg-accent-soft"}`}
-            onClick={() => {
-              if (!closing) {
-                onConfirm();
+            onClick={async () => {
+              if (closing || submitting) return;
+              setSubmitting(true);
+              setError(null);
+              try {
+                await onConfirm();
+              } catch {
+                setError(
+                  "Lectum could not complete this action. Please try again.",
+                );
+              } finally {
+                setSubmitting(false);
               }
             }}
+            disabled={submitting}
           >
-            {displayConfirmLabel}
+            {submitting ? "Working…" : displayConfirmLabel}
           </button>
         </div>
       </div>

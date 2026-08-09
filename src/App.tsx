@@ -44,6 +44,8 @@ export default function App() {
   const location = useLocation();
   const initialize = useBookStore((state) => state.initialize);
   const books = useBookStore((state) => state.books);
+  const libraryStatus = useBookStore((state) => state.status);
+  const libraryError = useBookStore((state) => state.error);
   const editorState = useBookStore((state) => state.editorState);
   const closeEditor = useBookStore((state) => state.closeEditor);
   const saveBook = useBookStore((state) => state.saveBook);
@@ -79,6 +81,24 @@ export default function App() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 sm:pb-6">
       <AppHeader />
+
+      {libraryStatus === "error" && !books.length ? (
+        <section
+          className="mb-4 rounded-2xl border border-danger bg-surface p-4 text-sm text-strong"
+          role="alert"
+        >
+          <p>{libraryError}</p>
+          <button
+            type="button"
+            className="mt-3 rounded-xl bg-accent px-3 py-2 text-inverse"
+            onClick={() => {
+              void initialize();
+            }}
+          >
+            Retry
+          </button>
+        </section>
+      ) : null}
 
       <main>
         <AnimatePresence mode="wait" initial={false}>

@@ -18,9 +18,9 @@ interface BookDetailsModalProps {
   onClose: () => void;
   onEdit: (bookId: string) => void;
   onFinish: (bookId: string) => void;
-  onReopen: (bookId: string) => void;
+  onReopen: (bookId: string) => Promise<void>;
   onDelete: (bookId: string) => void;
-  onStartReading: (bookId: string) => void;
+  onStartReading: (bookId: string) => Promise<void>;
 }
 
 export default function BookDetailsModal({
@@ -37,6 +37,8 @@ export default function BookDetailsModal({
   const [visible, setVisible] = useState(open);
   const [closing, setClosing] = useState(false);
   const [entering, setEntering] = useState(false);
+  const [actionPending, setActionPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const enterRaf = useRef<number | null>(null);
 
@@ -50,6 +52,8 @@ export default function BookDetailsModal({
       setVisible(true);
       setClosing(false);
       setEntering(true);
+      setActionPending(false);
+      setActionError(null);
       enterRaf.current = requestAnimationFrame(() => {
         enterRaf.current = requestAnimationFrame(() => setEntering(false));
       });
@@ -165,6 +169,10 @@ export default function BookDetailsModal({
             </div>
           </div>
 
+          {actionError ? (
+            <p className="mt-4 text-sm text-danger">{actionError}</p>
+          ) : null}
+
           {/* Buttons Below All Columns */}
           <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {isReading ? (
@@ -182,10 +190,21 @@ export default function BookDetailsModal({
               <button
                 type="button"
                 className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-3"
-                onClick={() => {
-                  onReopen(book.id);
-                  beginClose();
+                onClick={async () => {
+                  setActionPending(true);
+                  setActionError(null);
+                  try {
+                    await onReopen(book.id);
+                    beginClose();
+                  } catch {
+                    setActionError(
+                      "Lectum could not reopen this book. Please try again.",
+                    );
+                  } finally {
+                    setActionPending(false);
+                  }
                 }}
+                disabled={actionPending}
               >
                 Reopen
               </button>
@@ -193,10 +212,21 @@ export default function BookDetailsModal({
               <button
                 type="button"
                 className="w-full rounded-xl border border-subtle px-3 py-2 text-sm text-strong hover-nonaccent sm:order-3"
-                onClick={() => {
-                  onStartReading(book.id);
-                  beginClose();
+                onClick={async () => {
+                  setActionPending(true);
+                  setActionError(null);
+                  try {
+                    await onStartReading(book.id);
+                    beginClose();
+                  } catch {
+                    setActionError(
+                      "Lectum could not update this book. Please try again.",
+                    );
+                  } finally {
+                    setActionPending(false);
+                  }
                 }}
+                disabled={actionPending}
               >
                 Start
               </button>

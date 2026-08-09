@@ -211,6 +211,8 @@ export default function BookEditorModal({
         thumbnailDataUrl,
       });
       onClose();
+    } catch {
+      setError("Lectum could not save this book. Please try again.");
     } finally {
       setSubmitting(false);
     }

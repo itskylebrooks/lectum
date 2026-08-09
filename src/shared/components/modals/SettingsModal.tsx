@@ -198,9 +198,9 @@ export default function SettingsModal({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
     setImporting(true);
     try {
+      const text = await file.text();
       const parsed = parseImportPayload(text);
       if (!parsed.ok) {
         showStatus(
@@ -220,6 +220,11 @@ export default function SettingsModal({
       showStatus(
         "Import complete",
         `Imported ${parsed.payload.books.length} ${parsed.payload.books.length === 1 ? "book" : "books"}.`,
+      );
+    } catch {
+      showStatus(
+        "Import failed",
+        "Import failed. Check the file and try again.",
       );
     } finally {
       setImporting(false);

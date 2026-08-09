@@ -28,10 +28,14 @@ type EditorState =
     }
   | { open: true; mode: "edit"; bookId: string; initialStatus: BookFormStatus };
 
+export type LibraryStatus = "idle" | "loading" | "ready" | "error";
+
 interface BookStoreState {
   books: BookWithThumbnail[];
   loading: boolean;
   initialized: boolean;
+  status: LibraryStatus;
+  error: string | null;
   editorState: EditorState;
   finishBookId: string | null;
   deleteBookId: string | null;
@@ -56,6 +60,15 @@ interface BookStoreState {
 function nowIso() {
   return new Date().toISOString();
 }
+
+function persistenceErrorMessage(error: unknown) {
+  if (error instanceof DOMException && error.name === "QuotaExceededError") {
+    return "Lectum could not save because browser storage is full.";
+  }
+  return "Lectum could not access its local data. Please try again.";
+}
+
+let initializationPromise: Promise<void> | null = null;
 
 function makeId() {
   return typeof crypto !== "undefined" &&
@@ -214,19 +227,57 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
   books: [],
   loading: false,
   initialized: false,
+  status: "idle",
+  error: null,
   editorState: closeEditorState(),
   finishBookId: null,
   deleteBookId: null,
-  initialize: async () => {
-    if (get().initialized) return;
-    set({ loading: true });
-    const books = await initializeStoredLibrary(createStarterBooks());
-    set({ books, loading: false, initialized: true });
+  initialize: () => {
+    if (get().initialized) return Promise.resolve();
+    if (initializationPromise) return initializationPromise;
+
+    set({ loading: true, status: "loading", error: null });
+    initializationPromise = (async () => {
+      try {
+        const books = await initializeStoredLibrary(createStarterBooks());
+        set({
+          books,
+          loading: false,
+          initialized: true,
+          status: "ready",
+          error: null,
+        });
+      } catch (error) {
+        set({
+          loading: false,
+          initialized: false,
+          status: "error",
+          error: persistenceErrorMessage(error),
+        });
+      } finally {
+        initializationPromise = null;
+      }
+    })();
+    return initializationPromise;
   },
   refresh: async () => {
-    set({ loading: true });
-    const books = await listStoredBooks();
-    set({ books, loading: false, initialized: true });
+    set({ loading: true, status: "loading", error: null });
+    try {
+      const books = await listStoredBooks();
+      set({
+        books,
+        loading: false,
+        initialized: true,
+        status: "ready",
+        error: null,
+      });
+    } catch (error) {
+      set({
+        loading: false,
+        status: "error",
+        error: persistenceErrorMessage(error),
+      });
+    }
   },
   openCreate: (initialStatus = "next") =>
     set({
@@ -257,78 +308,135 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
     const book = existing
       ? updateBookFromValues(existing, values)
       : createBaseBook(values);
-    await saveStoredBook(book);
-    const books = await listStoredBooks();
-    set({ books, editorState: closeEditorState(), initialized: true });
+    try {
+      await saveStoredBook(book);
+      const books = await listStoredBooks();
+      set({
+        books,
+        editorState: closeEditorState(),
+        initialized: true,
+        status: "ready",
+        error: null,
+      });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   finishBook: async (bookId, values) => {
     const existing = resolveBook(get(), bookId);
     if (!existing) return;
 
-    await saveStoredBook({
-      ...existing,
-      isReading: false,
-      dateFinished: values.dateFinished,
-      rating: values.rating,
-      updatedAt: nowIso(),
-    });
+    try {
+      await saveStoredBook({
+        ...existing,
+        isReading: false,
+        dateFinished: values.dateFinished,
+        rating: values.rating,
+        updatedAt: nowIso(),
+      });
 
-    const books = await listStoredBooks();
-    set({ books, finishBookId: null, initialized: true });
+      const books = await listStoredBooks();
+      set({
+        books,
+        finishBookId: null,
+        initialized: true,
+        status: "ready",
+        error: null,
+      });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   startBook: async (bookId) => {
     const existing = resolveBook(get(), bookId);
     if (!existing || existing.dateFinished) return;
 
-    await saveStoredBook({
-      ...existing,
-      isReading: true,
-      updatedAt: nowIso(),
-    });
+    try {
+      await saveStoredBook({
+        ...existing,
+        isReading: true,
+        updatedAt: nowIso(),
+      });
 
-    const books = await listStoredBooks();
-    set({ books, initialized: true });
+      const books = await listStoredBooks();
+      set({ books, initialized: true, status: "ready", error: null });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   reopenBook: async (bookId) => {
     const existing = resolveBook(get(), bookId);
     if (!existing) return;
 
-    await saveStoredBook({
-      ...existing,
-      isReading: true,
-      dateFinished: undefined,
-      rating: undefined,
-      updatedAt: nowIso(),
-    });
+    try {
+      await saveStoredBook({
+        ...existing,
+        isReading: true,
+        dateFinished: undefined,
+        rating: undefined,
+        updatedAt: nowIso(),
+      });
 
-    const books = await listStoredBooks();
-    set({ books, initialized: true });
+      const books = await listStoredBooks();
+      set({ books, initialized: true, status: "ready", error: null });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   deleteBook: async (bookId) => {
-    await deleteStoredBook(bookId);
-    const books = await listStoredBooks();
-    set({ books, deleteBookId: null, initialized: true });
+    try {
+      await deleteStoredBook(bookId);
+      const books = await listStoredBooks();
+      set({
+        books,
+        deleteBookId: null,
+        initialized: true,
+        status: "ready",
+        error: null,
+      });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   importBooks: async (books) => {
-    await replaceStoredBooks(books);
-    const refreshed = await listStoredBooks();
-    set({
-      books: refreshed,
-      initialized: true,
-      editorState: closeEditorState(),
-      finishBookId: null,
-      deleteBookId: null,
-    });
+    try {
+      await replaceStoredBooks(books);
+      const refreshed = await listStoredBooks();
+      set({
+        books: refreshed,
+        initialized: true,
+        status: "ready",
+        error: null,
+        editorState: closeEditorState(),
+        finishBookId: null,
+        deleteBookId: null,
+      });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
   resetToStarterBooks: async () => {
     const starterBooks = createStarterBooks();
-    await replaceStoredBooks(starterBooks);
-    set({
-      books: starterBooks,
-      initialized: true,
-      editorState: closeEditorState(),
-      finishBookId: null,
-      deleteBookId: null,
-    });
+    try {
+      await replaceStoredBooks(starterBooks);
+      set({
+        books: starterBooks,
+        initialized: true,
+        status: "ready",
+        error: null,
+        editorState: closeEditorState(),
+        finishBookId: null,
+        deleteBookId: null,
+      });
+    } catch (error) {
+      set({ status: "error", error: persistenceErrorMessage(error) });
+      throw error;
+    }
   },
 }));
