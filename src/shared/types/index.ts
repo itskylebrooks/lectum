@@ -1,18 +1,18 @@
-export type ThemeMode = 'system' | 'light' | 'dark';
-export type DateFormatMode = 'DMY' | 'MDY';
-export type BookFormat = 'print' | 'digital' | 'audiobook';
-export type BookCategory = 'fiction' | 'non-fiction';
-export type BookRating = 'loved' | 'liked' | 'mixed' | 'disliked' | 'abandoned';
-export type BookFormStatus = 'next' | 'reading';
+export type ThemeMode = "system" | "light" | "dark";
+export type DateFormatMode = "DMY" | "MDY";
+export type BookFormat = "print" | "digital" | "audiobook";
+export type BookCategory = "fiction" | "non-fiction";
+export type BookRating = "loved" | "liked" | "mixed" | "disliked" | "abandoned";
+export type BookFormStatus = "next" | "reading";
 export type LibrarySort =
-  | 'finishedDesc'
-  | 'finishedAsc'
-  | 'title'
-  | 'author'
-  | 'publicationYearDesc'
-  | 'publicationYearAsc';
+  | "finishedDesc"
+  | "finishedAsc"
+  | "title"
+  | "author"
+  | "publicationYearDesc"
+  | "publicationYearAsc";
 
-export interface BookRecord {
+interface BookRecordFields {
   id: string;
   title: string;
   author: string;
@@ -20,21 +20,40 @@ export interface BookRecord {
   format: BookFormat;
   category: BookCategory;
   thumbnailId?: string;
-  isReading: boolean;
-  dateFinished?: string;
-  rating?: BookRating;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface BookWithThumbnail extends BookRecord {
-  thumbnailDataUrl?: string | null;
-}
+type NextBookState = {
+  isReading: false;
+  dateFinished?: undefined;
+  rating?: undefined;
+};
 
-export interface FinishedBook extends BookWithThumbnail {
+type ReadingBookState = {
+  isReading: true;
+  dateFinished?: undefined;
+  rating?: undefined;
+};
+
+type FinishedBookState = {
+  isReading: false;
   dateFinished: string;
   rating: BookRating;
-}
+};
+
+export type BookRecord = BookRecordFields &
+  (NextBookState | ReadingBookState | FinishedBookState);
+
+export type BookWithThumbnail = BookRecord & {
+  thumbnailDataUrl?: string | null;
+};
+
+export type FinishedBook = BookWithThumbnail & {
+  isReading: false;
+  dateFinished: string;
+  rating: BookRating;
+};
 
 export interface BookEditorValues {
   title: string;
@@ -57,7 +76,7 @@ export interface LectumSettings {
 }
 
 export interface LectumExportV1 {
-  app: 'lectum';
+  app: "lectum";
   version: string;
   exportedAt: string;
   settings: LectumSettings;
